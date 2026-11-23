@@ -50,6 +50,10 @@ For Codex, add this to `~/.codex/config.toml` as its own two-line table:
 X-Diagrid-Plugin-Version = "0.10.8"
 ```
 
+Codex's default sandbox has no network access, and the apps and workers the other skills
+start need it to reach Diagrid and package registries. Tell a Codex user to allow it, for
+example with `codex -c sandbox_workspace_write.network_access=true`.
+
 You cannot do the sign-in for the user. Ask them to do it, and once they say it is done,
 call `diagrid_whoami` again. Tools appear when it finishes.
 

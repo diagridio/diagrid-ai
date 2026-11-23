@@ -53,8 +53,10 @@ own code, it's the `appId` on its registry record.
    `resources/` files are for running without Diagrid, so leave them out. An app with
    no endpoint is the correct shape for a pure workflow worker, which dials Diagrid
    outbound.
-3. Read it back and wait for `ready`. `updating` right after a local connection attaches
-   is normal; give it time before calling it broken.
+3. Read it back with `diagrid_get_app` until it reports `ready`. Call the tool again
+   instead of waiting a fixed time with `sleep`, and do not wrap commands in `timeout`,
+   which macOS does not have. `updating` right after a local connection attaches is
+   normal; give it time before calling it broken.
 
 `diagrid_apply` is a write tool. If it is absent, the user's role cannot write: say so
 and stop.
@@ -90,6 +92,11 @@ hands them out through one tool.
    or server flags if it has any (a web app started with `uv run uvicorn main:app
    --port 5001` for example). A pure workflow worker dials Diagrid outbound and needs
    no inbound port.
+
+   Note the process ID. Once you have checked the run, stop the process, unless the user
+   wants it kept running. A process started in the background can outlive the session.
+   If it keeps running, tell the user that it is running, its process ID, and the command
+   that stops it (`kill <pid>`).
 4. **These are local-dev values, not production secrets.** A deployed app gets its own
    injected by the platform. Never paste `DAPR_API_TOKEN` into the chat, a pull request,
    an issue or a commit, and do not print it back to check it (`echo`, `env`, `cat .env`).
@@ -98,6 +105,10 @@ hands them out through one tool.
    call the tool again.
 6. If `diagrid_get_connection` is missing or refused, say that it is unavailable to
    this role or server, and stop. There is no other route to these values.
+7. If the process cannot reach Diagrid or a package registry from inside a sandbox, ask
+   the user to allow network access before reporting the run as blocked. Codex's default
+   sandbox has no network; `codex -c sandbox_workspace_write.network_access=true` allows
+   it for one session.
 
 Two things about the worker process itself:
 
@@ -137,8 +148,9 @@ status, its history, or stopping it. Losing it means listing runs and guessing w
 was yours, which is ambiguous the moment two runs start in the same second.
 
 **Show the run's console link at every step.** That means when the run starts, whenever
-you wait for the user (a crash, an approval, "type continue"), and when it ends. Use the
-link the tool response gives. If it gives none, build it from the run:
+you wait for the user (a crash, an approval, "type continue"), and when it ends. Print the
+full URL as plain text, not as a markdown link with a label, because the Claude Code
+terminal shows only the label. Use the link the tool response gives. If it gives none, build it from the run:
 `https://catalyst.diagrid.io/workflows/<app-id>/<instance-id>?project=<project>`. This
 works for an agent's runs too, with the agent's App ID.
 

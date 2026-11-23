@@ -257,6 +257,9 @@ back:
 - For the components and subscriptions attached to it, `diagrid_list_components`; read
   each one's `scopes`.
 
+Repeat the read until the resource settles. Do not wait a fixed time with `sleep` between
+reads, and do not wrap commands in `timeout`, which macOS does not have.
+
 **Ready is not one field.** Diagrid's own readiness check requires the identity's status to
 be `ready` **and** its API token to be present; a status of `ready` with no token yet is
 not usable, and that is the state a caller most often reports as "it says ready but
