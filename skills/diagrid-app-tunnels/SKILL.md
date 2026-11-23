@@ -179,8 +179,9 @@ process's log for the answer rather than repeating the call.
      header `dapr-api-token: $DAPR_API_TOKEN`.
    - With a Dapr SDK, its service-invocation call with app ID `orders`. The SDK reads
      the endpoint and the token from the environment.
-4. Calls between apps in a project are allowed unless an access policy restricts them.
-   To restrict them, use `diagrid_grant_access` with `target_kind: app` (or `agent`).
+4. With no access policy on the target, every app in the project can call it. Once the
+   target has a policy, a caller it does not name is refused (`diagrid-deploy` section
+   4). To restrict them, use `diagrid_grant_access` with `target_kind: app` (or `agent`).
    **Grant before you open the target's tunnel**, because attaching the policy updates
    the target's App ID (section 3). The first grant on an app creates a Configuration
    named after it. With `action: deny` its default becomes deny, and a denied call is
