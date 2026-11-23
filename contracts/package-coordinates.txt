@@ -22,26 +22,26 @@
 # without a line here, so this file cannot quietly fall out of step with skills/.
 
 pypi   diagrid                                         0.5.0
-pypi   dapr                                            -
+pypi   dapr                                            1.19.0
 pypi   dapr-ext-workflow                               -
 
 npm    @diagrid/agent-mastra                           0.2.0
 npm    @diagrid/agent-core                             -
-npm    @dapr/dapr                                      -
+npm    @dapr/dapr                                      3.19.0
 npm    @dapr/durabletask-js                            -
 npm    @mastra/core                                    -
 npm    @dapr/workflow                                  absent
 
 nuget  Diagrid.AI.Microsoft.AgentFramework             1.2.0
-nuget  Dapr.Workflow                                   -
+nuget  Dapr.Workflow                                   1.19.1
 nuget  Diagrid.Agents.Workflow                         absent
 
 maven  io.diagrid:diagrid-spring-ai-starter            0.4.0
-maven  io.dapr:dapr-sdk-workflows                      -
+maven  io.dapr:dapr-sdk-workflows                      1.19.1
 maven  io.dapr:dapr-sdk-bom                            -
 
 go     github.com/diagridio/go-ai                      v0.2.0
 go     github.com/diagridio/go-ai/adapters/langchaingo v0.1.1
 go     github.com/diagridio/go-ai/adapters/eino        v0.1.1
 go     github.com/dapr/durabletask-go                  -
-go     github.com/dapr/go-sdk                          -
+go     github.com/dapr/go-sdk                          v1.16.0
