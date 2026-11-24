@@ -21,7 +21,7 @@
 # The check also fails if a coordinate-shaped string appears in a skill code span
 # without a line here, so this file cannot quietly fall out of step with skills/.
 
-pypi   diagrid                                         0.5.0
+pypi   diagrid                                         0.5.4
 pypi   dapr                                            -
 pypi   dapr-ext-workflow                               -
 
@@ -32,7 +32,7 @@ npm    @dapr/durabletask-js                            -
 npm    @mastra/core                                    -
 npm    @dapr/workflow                                  absent
 
-nuget  Diagrid.AI.Microsoft.AgentFramework             1.2.0
+nuget  Diagrid.AI.Microsoft.AgentFramework             1.2.1
 nuget  Dapr.Workflow                                   -
 nuget  Diagrid.Agents.Workflow                         absent
 

@@ -51,8 +51,8 @@ different stage in each language, and that difference decides what you can scaff
 
 | Language | Coordinate | State |
 | --- | --- | --- |
-| Python | `diagrid[<framework>]` on PyPI, 0.5.0 | Widest coverage — 11 frameworks — and exercised against live Diagrid |
-| .NET | `Diagrid.AI.Microsoft.AgentFramework` on NuGet, 1.2.0 | Published. Microsoft Agent Framework; targets net8.0, net9.0, net10.0 |
+| Python | `diagrid[<framework>]` on PyPI, 0.5.4 | Widest coverage — 11 frameworks — and exercised against live Diagrid |
+| .NET | `Diagrid.AI.Microsoft.AgentFramework` on NuGet, 1.2.1 | Published. Microsoft Agent Framework; targets net8.0, net9.0, net10.0 |
 | Java | `io.diagrid:diagrid-spring-ai-starter` on Maven Central, 0.4.0 | Published, Spring AI. Its own README says the APIs are not yet stable |
 | Go | `github.com/diagridio/go-ai` v0.2.0; adapters `github.com/diagridio/go-ai/adapters/langchaingo` v0.1.1 and `github.com/diagridio/go-ai/adapters/eino` v0.1.1 | Published. Each adapter is its own module with its own release tag, built in CI |
 | TypeScript (Mastra) | `@diagrid/agent-mastra` on npm, 0.2.0 | Published and public, with provenance, Mastra only — not a general TypeScript adapter. Needs Node >= 22.13.0. First published 2026-08-23, so treat it as early |
