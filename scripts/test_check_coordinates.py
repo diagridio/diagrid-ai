@@ -117,7 +117,7 @@ class Registry(unittest.TestCase):
         lookup = fake_registry({"@dapr/dapr": Lookup(True, frozenset({"3.19.0", "3.20.0"}), "3.20.0")})
         entry = [Entry("npm", "@dapr/dapr", ">=3.19.0")]
         self.assertEqual(registry_problems(entry, lookup, strict_versions=False), [])
-        self.assertIn("3.20.0 is out", registry_problems(entry, lookup, strict_versions=True)[0])
+        self.assertIn("quote 3.19.0, and 3.20.0 is out", registry_problems(entry, lookup, strict_versions=True)[0])
 
     def test_a_minimum_at_the_latest_passes_in_strict_mode(self) -> None:
         lookup = fake_registry({"@dapr/dapr": Lookup(True, frozenset({"3.19.0"}), "3.19.0")})

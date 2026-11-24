@@ -162,7 +162,7 @@ def registry_problems(entries: list[Entry], lookup: Callable[[Entry], Lookup], s
         if entry.quoted not in result.versions:
             problems.append(f"{label}: the skills quote {entry.quoted}, which the registry does not have")
         elif strict_versions and result.latest and result.latest != entry.quoted:
-            problems.append(f"{label}: the skills quote {entry.version}, and {result.latest} is out — update the skill")
+            problems.append(f"{label}: the skills quote {entry.quoted}, and {result.latest} is out — update the skill")
     return problems
 
 
