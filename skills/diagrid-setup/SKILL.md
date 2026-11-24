@@ -66,18 +66,14 @@ plugin, they have two copies of every tool. Ask them to remove their own entry.
 
 ### Upgrading from 0.8.x
 
-The client may list the tools under their old `catalyst_*` names and no `diagrid_*` tools. That
-means it was set up for plugin 0.8.x and still sends the old `X-Catalyst-Plugin-Version`
-header, and the server offers the old tool names to any request that sends it. The
-skills call only `diagrid_*` tools. Ask the user to replace that header with
-`X-Diagrid-Plugin-Version`, set to the version in the snippets above, in their client's
+A client set up for plugin 0.8.x still sends the old `X-Catalyst-Plugin-Version` header. Its
+tools work, because the server offers the `diagrid_*` tools whichever header a request sends,
+but the server cannot tell which version the user runs. Ask the user to replace that header
+with `X-Diagrid-Plugin-Version`, set to the version in the snippets above, in their client's
 entry for the server:
 
 - Codex: the `http_headers` table in `~/.codex/config.toml`.
 - Copilot CLI and VS Code: that server's `headers`.
-
-Changing only the version number on the old header does not help. Do not call the
-`catalyst_*` tools in the meantime.
 
 In Claude Code, the plugin registers the server as `plugin:diagrid:diagrid`. If it shows
 it needs authentication, ask the user to pick it in `/mcp` and sign in. If `/mcp` also
