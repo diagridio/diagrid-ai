@@ -40,7 +40,7 @@ MAX_DESCRIPTION_CHARS = 260
 
 # A hard ceiling on skills, for the same reason. `claude plugin details` reports
 # roughly 100 always-on tokens per skill, so this is also a context budget.
-MAX_SKILLS = 12
+MAX_SKILLS = 13
 
 # Total description budget, well inside Codex's cap so we notice before it bites.
 MAX_TOTAL_DESCRIPTION_CHARS = 5000

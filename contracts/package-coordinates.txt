@@ -39,9 +39,11 @@ npm    @dapr/workflow                                  absent
 
 nuget  Diagrid.AI.Microsoft.AgentFramework             1.2.0
 nuget  Dapr.Workflow                                   >=1.19.1
+nuget  Diagrid.AI.Identity                             -
 nuget  Diagrid.Agents.Workflow                         absent
 
 maven  io.diagrid:diagrid-spring-ai-starter            0.4.0
+maven  io.diagrid:diagrid-spring-ai-identity           -
 maven  io.dapr:dapr-sdk-workflows                      >=1.19.1
 maven  io.dapr:dapr-sdk-bom                            -
 
