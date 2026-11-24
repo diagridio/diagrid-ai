@@ -96,7 +96,7 @@ server it just wrote:
 
 ```toml
 [mcp_servers.diagrid.http_headers]
-X-Diagrid-Plugin-Version = "0.10.3"
+X-Diagrid-Plugin-Version = "0.10.4"
 ```
 
 **GitHub Copilot CLI**
@@ -110,7 +110,7 @@ X-Diagrid-Plugin-Version = "0.10.3"
     "diagrid": {
       "type": "http",
       "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-      "headers": { "X-Diagrid-Plugin-Version": "0.10.3" },
+      "headers": { "X-Diagrid-Plugin-Version": "0.10.4" },
       "oauthClientId": "copilot-cli",
       "tools": ["*"]
     }
@@ -128,7 +128,7 @@ Then run `/mcp` inside Copilot and authenticate the server in the browser.
     "diagrid": {
       "type": "http",
       "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-      "headers": { "X-Diagrid-Plugin-Version": "0.10.3" },
+      "headers": { "X-Diagrid-Plugin-Version": "0.10.4" },
       "oauth": { "clientId": "vscode" }
     }
   }
