@@ -8,8 +8,9 @@ MCP TypeScript SDK:
 npm install @diagrid/agent-core @modelcontextprotocol/sdk
 ```
 
-If `npm` answers 403 or 404, the user's `.npmrc` may point at a private registry. Add
-`--registry=https://registry.npmjs.org` for this package.
+If `npm` answers 403 or 404, the user's `.npmrc` may send the `@diagrid` scope to a
+private registry. A scope setting wins over `--registry`, so add
+`--@diagrid:registry=https://registry.npmjs.org`. Do not edit the user's `.npmrc`.
 
 ## Verify the caller
 

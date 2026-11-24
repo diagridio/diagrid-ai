@@ -5,10 +5,13 @@ not exist in earlier versions. Get the latest, plus the MCP Go SDK for the clien
 
 ```bash
 go get github.com/diagridio/go-ai@latest
-go get github.com/modelcontextprotocol/go-sdk
+go get github.com/modelcontextprotocol/go-sdk@latest
 ```
 
-go-ai v0.2.0 declares Go 1.26.4, so the module needs at least that.
+go-ai v0.2.0 declares Go 1.26.4, so the module needs at least that. An older Go
+downloads that toolchain by itself, unless `GOTOOLCHAIN=local` is set. Then `go get`
+fails, and the user has to install a newer Go. The MCP Go SDK was tested at v1.6.1 and
+v1.8.0.
 
 Import only `github.com/diagridio/go-ai/identity`. go-ai's runner, its `agent` package
 and its `mcp` package all run tool calls as Dapr Workflows, after the request has ended,
@@ -70,7 +73,18 @@ func accountSummary(ctx context.Context, client *http.Client, accountID string) 
 		Name:      "account_summary",
 		Arguments: map[string]any{"account_id": accountID},
 	})
-	...
+	if err != nil {
+		return "", err
+	}
+	if result.IsError {
+		return "", fmt.Errorf("account_summary failed")
+	}
+	for _, content := range result.Content {
+		if text, ok := content.(*mcp.TextContent); ok {
+			return text.Text, nil
+		}
+	}
+	return "", nil
 }
 ```
 

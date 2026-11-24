@@ -1,10 +1,12 @@
 # Python
 
-Package: `diagrid[identity]` on PyPI, 0.5.0 or later, on Python 3.11 to 3.13. Install
-the latest:
+Package: `diagrid[identity]` on PyPI, 0.5.0 or later. Its metadata asks for Python 3.11
+to 3.13. Install the latest:
 
 ```bash
 pip install "diagrid[identity]"
+# or, with uv: pin a supported Python first, because uv picks the newest one
+uv python pin 3.13 && uv add "diagrid[identity]"
 ```
 
 Add it next to a framework extra when the app needs both, for example
@@ -70,6 +72,8 @@ imported from `diagrid.identity.http`.
 ## Traps
 
 - On `mcp` 1.x a type checker rejects `http_client=`. Use `mcp` 2.x.
+- The middleware also answers 401 to the sidecar's own `GET /` and `GET /dapr/config`.
+  That is harmless: calls through Diagrid still work.
 - Run on its own, or under plain `dapr run`, the app has no Diagrid connection. The first
   request with a token answers 503 `oauth.not_configured`. Start it with its Diagrid
   connection and tunnel, as `diagrid-app-tunnels` describes.

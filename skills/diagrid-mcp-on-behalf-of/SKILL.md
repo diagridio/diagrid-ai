@@ -78,27 +78,41 @@ user's agreement first.
 
 **The `MCPServer` auth profile must be SPIFFE JWT.** Only that profile lets Diagrid mint
 the user's token for the server. The other profiles send an app credential with no user
-in it. In the server's spec:
+in it. `scopes` lists the App IDs allowed to call the server:
 
 ```yaml
-endpoint:
-  streamableHTTP:
-    url: https://crm.example.com/mcp
-    auth:
-      spiffe:
-        jwt:
-          header: Authorization
-          headerValuePrefix: "Bearer "
+apiVersion: dapr.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: crm-mcp
+spec:
+  endpoint:
+    streamableHTTP:
+      url: https://crm.example.com/mcp
+      auth:
+        spiffe:
+          jwt:
+            header: Authorization
+            headerValuePrefix: "Bearer "
+scopes:
+  - identity-agent
 ```
+
+A server whose upstream runs on the user's machine reports `error` until its tunnel
+opens. That is expected, not a failed apply.
 
 **The `MCPServerAccessPolicy` must require a user.** By default Diagrid removes the
 user's token before forwarding, and the tool sees no user. Requiring one turns
 propagation on, and also rejects any call that has no user. Diagrid creates the policy
-together with the server, so a new server must be listed by `diagrid_get_mcp_server`
-before its policy can be applied. Keep the policy's existing `rules` and add `auth` to
-its spec:
+together with the server, with the same name as the server, so a new server must be
+listed by `diagrid_get_mcp_server` before its policy can be applied. Read the policy with
+`diagrid_get_access_policy`, which also gives its `apiVersion`, keep its existing
+`rules`, and add `auth` to its spec:
 
 ```yaml
+kind: MCPServerAccessPolicy
+metadata:
+  name: crm-mcp
 spec:
   mcpServerRef: crm-mcp
   rules:
@@ -113,6 +127,10 @@ spec:
 ```
 
 Grant the app its tools with `diagrid_grant_access`, as for any MCP server.
+
+Reading the policy back may not show `auth`, even when the setting took. The proof that
+it works is the tool seeing the user, in section 6. A full read of an MCP server or an
+App ID can include the App ID's API token. Never show those fields to the user.
 
 Requiring a user applies to every caller of that server, including the user's own cron
 jobs. Before you set it, check who the policy's `rules` name. If a tool must serve both
@@ -142,7 +160,9 @@ Follow the language file. In every language:
   may use its sidecar. The identity client adds `X-Diagrid-User-Token`, which says whose
   behalf it acts on. Add the first yourself and never the second.
 - **Open the MCP session while the inbound request is being handled**, so the caller's
-  context is still there when each MCP request is sent.
+  context is there for every MCP request, the `initialize` handshake included. Never
+  connect at startup: there is no caller then. A client object that is shared across
+  requests is fine when it reads the caller per request, as each language file shows.
 
 ## 5. Read the user on the MCP server
 

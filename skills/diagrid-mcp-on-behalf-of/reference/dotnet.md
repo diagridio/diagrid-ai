@@ -56,28 +56,38 @@ builder.Services.AddDiagridIdentityHttpClient(configure: client =>
 });
 ```
 
-Then build the MCP client on it, inside the request:
+Then build the MCP client on it, inside the request. The handler gets
+`IHttpClientFactory` and `ILoggerFactory` by injection:
 
 ```csharp
 using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
 
-var http = httpClientFactory.CreateClient(
-    DiagridIdentityHttpClientServiceCollectionExtensions.DefaultClientName);
+app.MapPost("/agent/run", async (IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory) =>
+{
+    var http = httpClientFactory.CreateClient(
+        DiagridIdentityHttpClientServiceCollectionExtensions.DefaultClientName);
 
-await using var transport = new HttpClientTransport(
-    new HttpClientTransportOptions
-    {
-        Endpoint = new Uri($"{Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT")}/v1.0/diagrid/mcp/crm-mcp"),
-        TransportMode = HttpTransportMode.StreamableHttp,
-    },
-    http,
-    loggerFactory,
-    ownsHttpClient: false);
+    await using var transport = new HttpClientTransport(
+        new HttpClientTransportOptions
+        {
+            Endpoint = new Uri($"{Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT")}/v1.0/diagrid/mcp/crm-mcp"),
+            TransportMode = HttpTransportMode.StreamableHttp,
+        },
+        http,
+        loggerFactory,
+        ownsHttpClient: false);
 
-await using var client = await McpClient.CreateAsync(transport, loggerFactory: loggerFactory);
-var result = await client.CallToolAsync(
-    "account_summary", new Dictionary<string, object?> { ["accountId"] = accountId });
+    await using var client = await McpClient.CreateAsync(transport, loggerFactory: loggerFactory);
+    var result = await client.CallToolAsync(
+        "account_summary", new Dictionary<string, object?> { ["account_id"] = "ACME-1" });
+    var text = result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text;
+    ...
+});
 ```
+
+The argument names are the tool's own, from its schema. They are not converted to C#
+style.
 
 The handler reads the caller from `AsyncLocal` when each request is sent, so one shared
 client is safe under concurrency. `ownsHttpClient: false` keeps the transport from
@@ -85,6 +95,9 @@ disposing the factory's client.
 
 ## Traps
 
+- `ModelContextProtocol` 2.4 logs `Tool 'account_summary' not found in cache during
+  tools/call` when the client calls a tool it has not listed. It is harmless. Call
+  `ListToolsAsync` first to silence it.
 - The registration turns off `AllowAutoRedirect`, because the handler follows redirects
   itself and drops the user header when a redirect leaves the origin. Do not turn it back
   on.

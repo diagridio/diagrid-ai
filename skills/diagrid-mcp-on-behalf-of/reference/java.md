@@ -1,8 +1,9 @@
 # Java
 
 Package: `io.diagrid:diagrid-spring-ai-identity` on Maven Central, 0.4.0 or later, on Java
-17 or later. It brings the core identity module and its one dependency, `nimbus-jose-jwt`.
-Use the latest release and put that version in the `pom.xml`:
+17 or later. 0.4.0 is built for Spring Boot 4.0 (Spring 7, Jakarta servlet). It brings the
+core identity module and its one dependency, `nimbus-jose-jwt`. Use the latest release
+and put that version in the `pom.xml`:
 
 ```xml
 <dependency>
@@ -13,10 +14,12 @@ Use the latest release and put that version in the `pom.xml`:
 <dependency>
   <groupId>io.modelcontextprotocol.sdk</groupId>
   <artifactId>mcp</artifactId>
+  <version>2.0.0</version>
 </dependency>
 ```
 
-Take the `mcp` version from the Spring AI BOM the project already uses, so the two agree.
+No BOM manages `mcp`, so give its version. 2.0.0 is the one Spring AI 2.0.0 is built
+against.
 
 ## Verify the caller
 
@@ -36,6 +39,8 @@ OAuthFilter diagridOAuthFilter() {
 In a controller:
 
 ```java
+import io.diagrid.ai.identity.VerifiedUser;
+
 VerifiedUser user = OAuthFilter.verifiedUser(request).orElseThrow();
 ```
 
@@ -53,6 +58,7 @@ import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.common.McpTransportContext;
+import java.util.Map;
 
 static final String TOKEN_KEY = "diagrid.userToken";
 
@@ -82,8 +88,9 @@ McpSyncClient connect() {
 
 This is the one place the header is set in app code, because the identity package cannot
 reach the MCP SDK's threads. It uses the package's own constants and token, and does
-nothing else with the token. Build the client once and share it. Each call captures its
-own caller.
+nothing else with the token. Build the client on the first request that needs it, never
+at startup, because `initialize()` is itself an MCP request and needs a caller. Then share
+it: each call captures its own caller.
 
 For calls through Spring's `RestClient`, such as a sub-agent, use the package's
 `IdentityClientHttpRequestInterceptor`. For a plain `java.net.http.HttpClient`, use
