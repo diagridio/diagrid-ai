@@ -1,6 +1,9 @@
 # .NET
 
-Add `Dapr.Workflow` 1.19.1. It brings `Microsoft.Extensions.Hosting` 10.0.8 with it; a
+Add the latest `Dapr.Workflow`, 1.19.1 or later, with `dotnet add package Dapr.Workflow`. The
+current version and the API are in
+[the .NET workflow SDK docs](https://docs.dapr.io/developing-applications/sdks/dotnet/dotnet-workflow/).
+1.19.1 brings `Microsoft.Extensions.Hosting` 10.0.8 with it; a
 direct reference to an older Hosting version fails the restore with `NU1605`, so leave
 Hosting out or match it.
 
@@ -76,7 +79,7 @@ public sealed class ReserveActivity : WorkflowActivity<Order, string>
   without asking.
 - On the .NET 9 SDK the build warns `CS9057` for the Dapr.BinaryStore analyzer. The
   worker still runs.
-- **Registration:** 1.19.1 registers every `Workflow` and `WorkflowActivity` class on its
+- **Registration:** from 1.19.1 the SDK registers every `Workflow` and `WorkflowActivity` class on its
   own. With the explicit `Register*` calls above it logs `Workflow 'OrderWorkflow' is
   already registered` at startup. Both forms run; the warning is harmless.
 - `Call canceled by the client` in the log after the run is the worker stopping.

@@ -1,9 +1,12 @@
 # Go
 
-Add `github.com/dapr/go-sdk` v1.16.0 and let it choose `github.com/dapr/durabletask-go`:
+Add the latest `github.com/dapr/go-sdk`, v1.16.0 or later, and let it choose
+`github.com/dapr/durabletask-go`. The Go SDK has no workflow page of its own; the Go tab of
+[the workflow authoring guide](https://docs.dapr.io/developing-applications/building-blocks/workflow/howto-author-workflow/)
+shows the current API.
 
 ```
-go get github.com/dapr/go-sdk@v1.16.0
+go get github.com/dapr/go-sdk@latest
 go mod tidy
 ```
 

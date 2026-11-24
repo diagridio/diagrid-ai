@@ -12,17 +12,17 @@ what goes wrong here goes wrong on the first real run.
 ## 1. Detect the language, then load its file
 
 Language is a parameter of this skill, not a variant of it. Read the repository first,
-then load the one file for that language. Each holds the packages and versions, a
-minimal worker that was run against Diagrid, the workflow name and input shape to start
+then load the one file for that language. Each holds the packages and their minimum
+versions, a link to the SDK docs for the current version and API, a minimal worker that was run against Diagrid, the workflow name and input shape to start
 it with, and the traps found on real runs.
 
-| Found at the top level | Language | File | Verified with |
+| Found at the top level | Language | File | Minimum version |
 | --- | --- | --- | --- |
-| `pyproject.toml`, `requirements.txt`, `*.py` | Python | [reference/python.md](reference/python.md) | `dapr[workflow]` 1.19.0 |
-| `*.csproj`, `*.sln`, `global.json` | .NET | [reference/dotnet.md](reference/dotnet.md) | `Dapr.Workflow` 1.19.1 |
-| `pom.xml`, `build.gradle` | Java | [reference/java.md](reference/java.md) | `io.dapr:dapr-sdk-workflows` 1.19.1 |
-| `go.mod` | Go | [reference/go.md](reference/go.md) | `github.com/dapr/go-sdk` v1.16.0 |
-| `package.json`, `tsconfig.json` | TypeScript / JavaScript | [reference/typescript.md](reference/typescript.md) | `@dapr/dapr` 3.19.0 |
+| `pyproject.toml`, `requirements.txt`, `*.py` | Python | [reference/python.md](reference/python.md) | `dapr[workflow]` 1.19.0 or later |
+| `*.csproj`, `*.sln`, `global.json` | .NET | [reference/dotnet.md](reference/dotnet.md) | `Dapr.Workflow` 1.19.1 or later |
+| `pom.xml`, `build.gradle` | Java | [reference/java.md](reference/java.md) | `io.dapr:dapr-sdk-workflows` 1.19.1 or later |
+| `go.mod` | Go | [reference/go.md](reference/go.md) | `github.com/dapr/go-sdk` v1.16.0 or later |
+| `package.json`, `tsconfig.json` | TypeScript / JavaScript | [reference/typescript.md](reference/typescript.md) | `@dapr/dapr` 3.19.0 or later |
 | `Cargo.toml` | Rust | none | Not supported: the Rust SDK's workflow worker cannot connect to Diagrid. Say so and stop |
 
 Ask only when the directory is empty, or when two of these sit side by side and the

@@ -13,6 +13,10 @@
 #              the same line as the coordinate somewhere under skills/.
 #              The scheduled run also fails when a newer release exists, so a
 #              quoted version cannot silently fall behind.
+#   `>=X`    the skills give X as a minimum and send the user to the SDK docs
+#            for the current version. X must exist and must appear on the same
+#            line as the coordinate. The scheduled run still fails when a newer
+#            release exists, so someone checks the skill against it and raises X.
 #              `-`      the skills name the package without a version
 #              `absent` the skills name it as something that does NOT exist,
 #                       and the check fails if it starts resolving
@@ -22,26 +26,26 @@
 # without a line here, so this file cannot quietly fall out of step with skills/.
 
 pypi   diagrid                                         0.5.0
-pypi   dapr                                            1.19.0
+pypi   dapr                                            >=1.19.0
 pypi   dapr-ext-workflow                               -
 
 npm    @diagrid/agent-mastra                           0.2.0
 npm    @diagrid/agent-core                             -
-npm    @dapr/dapr                                      3.19.0
+npm    @dapr/dapr                                      >=3.19.0
 npm    @dapr/durabletask-js                            -
 npm    @mastra/core                                    -
 npm    @dapr/workflow                                  absent
 
 nuget  Diagrid.AI.Microsoft.AgentFramework             1.2.0
-nuget  Dapr.Workflow                                   1.19.1
+nuget  Dapr.Workflow                                   >=1.19.1
 nuget  Diagrid.Agents.Workflow                         absent
 
 maven  io.diagrid:diagrid-spring-ai-starter            0.4.0
-maven  io.dapr:dapr-sdk-workflows                      1.19.1
+maven  io.dapr:dapr-sdk-workflows                      >=1.19.1
 maven  io.dapr:dapr-sdk-bom                            -
 
 go     github.com/diagridio/go-ai                      v0.2.0
 go     github.com/diagridio/go-ai/adapters/langchaingo v0.1.1
 go     github.com/diagridio/go-ai/adapters/eino        v0.1.1
 go     github.com/dapr/durabletask-go                  -
-go     github.com/dapr/go-sdk                          v1.16.0
+go     github.com/dapr/go-sdk                          >=v1.16.0

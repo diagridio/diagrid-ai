@@ -1,13 +1,15 @@
 # TypeScript and JavaScript
 
-Add `@dapr/dapr` 3.19.0. The workflow runtime and client are in the main package; there
+Add the latest `@dapr/dapr`, 3.19.0 or later. The current version and the API are in
+[the JavaScript workflow SDK docs](https://docs.dapr.io/developing-applications/sdks/js/js-workflow/).
+The workflow runtime and client are in the main package; there
 is no separate workflow package to install.
 
 ```json
 {
   "type": "module",
   "scripts": { "build": "tsc", "start": "node dist/main.js" },
-  "dependencies": { "@dapr/dapr": "3.19.0" },
+  "dependencies": { "@dapr/dapr": "^3.19.0" },
   "devDependencies": { "typescript": "^5.9.0", "@types/node": "^24.0.0" }
 }
 ```

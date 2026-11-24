@@ -1,13 +1,15 @@
 # Python
 
-Install `dapr[workflow]` 1.19.0. From 1.19 the workflow SDK ships inside `dapr`, under
+Install the latest `dapr[workflow]`, 1.19.0 or later. The current version and the API are in
+[the Python workflow SDK docs](https://docs.dapr.io/developing-applications/sdks/python/python-sdk-extensions/python-workflow-ext/).
+From 1.19 the workflow SDK ships inside `dapr`, under
 `dapr.ext.workflow`. The separate `dapr-ext-workflow` distribution stops at 1.18.3, so do
 not add it to a 1.19 project.
 
 ```toml
 [project]
 requires-python = ">=3.10"
-dependencies = ["dapr[workflow]==1.19.0"]
+dependencies = ["dapr[workflow]>=1.19.0"]
 ```
 
 This worker ran against Diagrid with the three connection values in its environment

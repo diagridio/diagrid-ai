@@ -1,6 +1,9 @@
 # Java
 
-Add `io.dapr:dapr-sdk-workflows` 1.19.1. It needs Java 17 or newer.
+Add the latest `io.dapr:dapr-sdk-workflows`, 1.19.1 or later, and put that version in the
+`pom.xml` below. The current version and the API are in
+[the Java workflow SDK docs](https://docs.dapr.io/developing-applications/sdks/java/java-workflow/).
+It needs Java 17 or newer.
 
 ```xml
 <properties>

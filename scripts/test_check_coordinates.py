@@ -84,6 +84,10 @@ class Agreement(unittest.TestCase):
         problems = agreement_problems([Entry("npm", "@diagrid/agent-mastra", "0.2.0")], ["`@diagrid/agent-mastra` on npm, 0.1.0"])
         self.assertIn("no skill line quotes that version", problems[0])
 
+    def test_a_minimum_is_matched_without_its_marker(self) -> None:
+        entries = [Entry("npm", "@dapr/dapr", ">=3.19.0")]
+        self.assertEqual(agreement_problems(entries, ["Add `@dapr/dapr`, 3.19.0 or later."]), [])
+
     def test_a_go_import_path_is_covered_by_its_module(self) -> None:
         entries = [Entry("go", "github.com/dapr/durabletask-go", "-")]
         self.assertEqual(agreement_problems(entries, ["`github.com/dapr/durabletask-go/workflow`"]), [])
@@ -108,6 +112,21 @@ class Registry(unittest.TestCase):
         entry = [Entry("pypi", "diagrid", "0.4.3")]
         self.assertEqual(registry_problems(entry, lookup, strict_versions=False), [])
         self.assertIn("0.5.0 is out", registry_problems(entry, lookup, strict_versions=True)[0])
+
+    def test_a_minimum_behind_the_latest_fails_only_in_strict_mode(self) -> None:
+        lookup = fake_registry({"@dapr/dapr": Lookup(True, frozenset({"3.19.0", "3.20.0"}), "3.20.0")})
+        entry = [Entry("npm", "@dapr/dapr", ">=3.19.0")]
+        self.assertEqual(registry_problems(entry, lookup, strict_versions=False), [])
+        self.assertIn("3.20.0 is out", registry_problems(entry, lookup, strict_versions=True)[0])
+
+    def test_a_minimum_at_the_latest_passes_in_strict_mode(self) -> None:
+        lookup = fake_registry({"@dapr/dapr": Lookup(True, frozenset({"3.19.0"}), "3.19.0")})
+        self.assertEqual(registry_problems([Entry("npm", "@dapr/dapr", ">=3.19.0")], lookup, strict_versions=True), [])
+
+    def test_a_minimum_the_registry_does_not_have_fails(self) -> None:
+        lookup = fake_registry({"@dapr/dapr": Lookup(True, frozenset({"3.19.0"}), "3.19.0")})
+        problems = registry_problems([Entry("npm", "@dapr/dapr", ">=3.99.0")], lookup, strict_versions=False)
+        self.assertIn("3.99.0, which the registry does not have", problems[0])
 
     def test_an_absent_coordinate_passes_while_it_stays_absent(self) -> None:
         entry = [Entry("nuget", "Diagrid.Agents.Workflow", "absent")]
