@@ -164,8 +164,21 @@ A tool that refuses is likewise not a workflow that failed. Report the refusal.
 ## 7. Hand back a link, not a claim
 
 Once the app exists and a run has started, give the user a console link so they can
-see it for themselves. Print the full URL as plain text, not as a markdown link with a
-label, because the Claude Code terminal shows only the label. The console for the production server is `https://catalyst.diagrid.io`. Only these routes
+see it for themselves.
+
+Print each link in this format, with an empty line before and after it:
+
+```
+Open the run in the Diagrid console:
+
+  https://catalyst.diagrid.io/workflows/<app-id>/<instance-id>?project=<project>
+```
+
+The first line says what the link opens. The URL goes alone on its own line, indented two
+spaces, with nothing before or after it. Do not write it as a markdown link with a label,
+because the Claude Code terminal shows only the label, and do not wrap it in backticks.
+
+The console for the production server is `https://catalyst.diagrid.io`. Only these routes
 exist:
 
 | To show | Route |

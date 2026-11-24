@@ -148,9 +148,21 @@ status, its history, or stopping it. Losing it means listing runs and guessing w
 was yours, which is ambiguous the moment two runs start in the same second.
 
 **Show the run's console link at every step.** That means when the run starts, whenever
-you wait for the user (a crash, an approval, "type continue"), and when it ends. Print the
-full URL as plain text, not as a markdown link with a label, because the Claude Code
-terminal shows only the label. Use the link the tool response gives. If it gives none, build it from the run:
+you wait for the user (a crash, an approval, "type continue"), and when it ends.
+
+Print each link in this format, with an empty line before and after it:
+
+```
+Open the run in the Diagrid console:
+
+  https://catalyst.diagrid.io/workflows/<app-id>/<instance-id>?project=<project>
+```
+
+The first line says what the link opens. The URL goes alone on its own line, indented two
+spaces, with nothing before or after it. Do not write it as a markdown link with a label,
+because the Claude Code terminal shows only the label, and do not wrap it in backticks.
+
+Use the link the tool response gives. If it gives none, build it from the run:
 `https://catalyst.diagrid.io/workflows/<app-id>/<instance-id>?project=<project>`. This
 works for an agent's runs too, with the agent's App ID.
 
