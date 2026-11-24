@@ -102,7 +102,7 @@ keeps updating.
 
    ```toml
    [mcp_servers.diagrid.http_headers]
-   X-Diagrid-Plugin-Version = "0.10.2"
+   X-Diagrid-Plugin-Version = "0.10.3"
    ```
 
 3. **Sign in.**
@@ -133,7 +133,7 @@ keeps updating.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.10.2" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.10.3" },
          "oauthClientId": "copilot-cli",
          "tools": ["*"]
        }
@@ -162,7 +162,7 @@ keeps updating.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.10.2" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.10.3" },
          "oauth": { "clientId": "vscode" }
        }
      }
