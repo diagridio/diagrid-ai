@@ -13,13 +13,14 @@
 #              the same line as the coordinate somewhere under skills/.
 #              The scheduled run also fails when a newer release exists, so a
 #              quoted version cannot silently fall behind.
-#   `>=X`    the skills give X as a minimum and send the user to the SDK docs
-#            for the current version. X must exist and must appear on the same
-#            line as the coordinate. The scheduled run still fails when a newer
-#            release exists, so someone checks the skill against it and raises X.
 #              `-`      the skills name the package without a version
 #              `absent` the skills name it as something that does NOT exist,
 #                       and the check fails if it starts resolving
+#              `>=X`    the skills give X as a minimum and send the user to the
+#                       SDK docs for the current version. X must exist and must
+#                       appear on the same line as the coordinate. The scheduled
+#                       run still fails when a newer release exists, so someone
+#                       checks the skill against it and raises X.
 #
 # For Go, list the module; an import path under it is covered by its module.
 # The check also fails if a coordinate-shaped string appears in a skill code span
