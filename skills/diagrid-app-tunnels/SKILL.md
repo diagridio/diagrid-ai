@@ -45,12 +45,22 @@ server on this machine", only the MCP server is tunneled; the agent is a caller.
    user at the PowerShell installer at `https://downloads.diagrid.io/cli/install.ps1`.
 3. `diagrid login` opens a browser to sign in. This is a **separate sign-in** from the
    Diagrid MCP server, and only the user can complete it. Ask them to run it; never ask
-   for a token or key instead.
+   for a token or key instead. Where no browser can open, `diagrid login --no-browser`
+   prints a link the user opens elsewhere.
 4. Confirm both sign-ins land in the same organization: compare `diagrid whoami` with
    `diagrid_whoami`. A tunnel opened in one organization serves nothing that the
    resources created through MCP in another organization can see. `diagrid whoami` is
    how to check the CLI; never open or print the files under `~/.diagrid/`, which hold
    the user's sign-in tokens.
+5. Confirm they use the same environment too. `diagrid whoami` prints an `API` line: the
+   server the CLI talks to. The MCP server is `https://mcp.cloud.r1.diagrid.io/mcp`
+   unless the user set `DIAGRID_MCP_URL` to point the plugin elsewhere. Both must be the
+   same environment, and the same organization name in two environments is still two
+   organizations. Switching organization with the CLI does not move it to another
+   environment.
+6. On any mismatch, stop before creating anything. Say which side points where, and ask
+   the user to sign one side in again to match the other: `diagrid login` for the CLI, or
+   `/mcp` (or their client's MCP sign-in) for the MCP server. Then compare again.
 
 ## 3. `diagrid dev run`: one process behind one identity
 
@@ -289,7 +299,7 @@ until `diagrid_list_app_tunnels` no longer lists the App ID (section 3). Do not 
 | `diagrid_list_app_tunnels` shows a tunnel `ready`, yet nothing arrives | The record outlived its `dev run` | Check that `dev run` is still running; start it again |
 | A workflow that calls `dapr.internal.mcp.<name>.*` stays running with nothing after `ExecutionStarted` | The workflow path does not reach an MCP server behind a tunnel | Call the server through `/v1.0/diagrid/mcp/<name>` instead (section 5) |
 | The caller's discovery is empty, or the call returns 404 | No grant for that caller | `diagrid_get_access_policy`, then `diagrid_grant_access` |
-| CLI commands land in a different organization | The CLI and the MCP server are signed in to different organizations | Compare `diagrid whoami` with `diagrid_whoami` (section 2) |
+| CLI commands land in a different organization, or a tunnel serves nothing the MCP tools created | The CLI and the MCP server are signed in to different organizations or environments | Compare `diagrid whoami`, including its `API` line, with `diagrid_whoami` (section 2) |
 
 ## Rules
 

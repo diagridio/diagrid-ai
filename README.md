@@ -67,6 +67,12 @@ read-only.
 Check it worked by asking: *"Who am I in Diagrid?"* The answer comes from
 `diagrid_whoami`.
 
+To point the plugin at another Diagrid environment, set `DIAGRID_MCP_URL` to that
+environment's MCP URL before you start Claude Code, then sign in again with `/mcp`. The
+plugin reads it in place of `https://mcp.cloud.r1.diagrid.io/mcp` and keeps the client
+ID `claude-code`. App tunnels need a second sign-in, in the same environment and
+organization; the `diagrid-app-tunnels` skill checks that both match.
+
 ### Connect other clients to the remote MCP server
 
 Every client connects to the same remote server, `https://mcp.cloud.r1.diagrid.io/mcp`
