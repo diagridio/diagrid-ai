@@ -154,6 +154,19 @@ What it does to the platform:
 run file (`apps:` with `appID`, `appPort`, `command`, `env`). Then run
 `diagrid dev run -f <file>`. `--id` and `-f` cannot be combined.
 
+**Proving a request arrives.** With the tunnel open, send one request through Diagrid:
+
+```
+diagrid call invoke post <app-id>.<path> --id <app-id> -p <project> -d '<json>'
+```
+
+`<path>` is the route the process serves, without the leading slash (`run` for
+`POST /run`); in `call invoke`, `-p` is the project. The request goes through Diagrid
+under that App ID, so the process's own log shows it arriving. The CLI gives up after
+about 10 seconds and retries, so a slower request fails with `Client.Timeout exceeded`
+and reaches the process two or three times. Keep the test request quick, and read the
+process's log for the answer rather than repeating the call.
+
 ## 4. App to app: service invocation between two local apps
 
 1. Run the **target** with a tunnel:

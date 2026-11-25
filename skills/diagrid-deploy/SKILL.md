@@ -127,8 +127,8 @@ do.
 
 | Deploying | Kind | Who owns the identity |
 | --- | --- | --- |
-| Your own application | `App` | The app you just made |
-| An agent whose code you run yourself | `Agent` | The agent provisions and manages its own |
+| Your own application, other than an agent | `App` | The app you just made |
+| An agent whose code you run yourself, written with any framework or none | `Agent` | The agent provisions and manages its own |
 | An MCP server | `MCPServer` | The MCP server, likewise |
 
 Read `diagrid_get_resource_schema` for the fields each takes. An `App` takes an
@@ -145,6 +145,22 @@ delivery stay blocked.
 `Agent` fronts an agent your application runs. An application that runs itself — locally,
 in a container, anywhere — uses **`Agent`** for that. There are no model settings on it,
 and looking for one is the signal that you have the wrong resource.
+
+### An agent the user already has
+
+When the user asks to deploy or run an agent they already wrote, Diagrid does not host or
+run the code. The process keeps running where the user runs it, and Diagrid reaches it
+through an app tunnel. The agent's code does not change: do not wrap it in a workflow or
+add a Dapr SDK unless the user asks.
+
+1. Apply an `Agent`, not an `App`, after checking that the name is free (above).
+2. Read its App ID with `diagrid_get_app` until it is `ready`.
+3. Open the tunnel with the user's own start command and the port the agent serves on
+   (`diagrid-app-tunnels` section 3).
+4. Prove that a request arrives through Diagrid (`diagrid-app-tunnels`, "Proving a
+   request arrives"), and report the agent's own answer.
+5. Tell the user that Diagrid reaches the agent only while `dev run` runs, and how to
+   stop it.
 
 ## 3. Ordering constraints, and the mechanism behind each
 
@@ -245,9 +261,10 @@ Four readings that mislead if taken alone:
 Then prove the path rather than trusting the status. For a workflow app, start a run with
 `diagrid_start_workflow` and read it back with `diagrid_get_workflow_run`; that
 separates the platform from the application. `diagrid_get_metrics` shows whether the app
-has served or sent anything. Invoking the app directly, publishing a test message and
-reading state back are not available over MCP yet; say so rather than claiming you
-checked them.
+has served or sent anything. Invoking an app or agent is not available over MCP; for
+one behind an app tunnel, use the CLI call in `diagrid-app-tunnels` ("Proving a request
+arrives"). Publishing a test message and reading state back are not available over MCP
+yet; say so rather than claiming you checked them.
 
 The API token of an app, agent or MCP server is the credential for that identity. No read tool returns it; only
 `diagrid_get_connection` does (see `diagrid-develop` section 3). Do not ask the user
