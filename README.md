@@ -80,6 +80,12 @@ If you installed `catalyst-ai@diagrid` before, that is this plugin under its old
 `diagridio/catalyst-ai`; GitHub redirects the old name, so a marketplace added from it
 keeps updating.
 
+To point the plugin at another Diagrid environment, set `DIAGRID_MCP_URL` to that
+environment's MCP URL before you start Claude Code, then sign in again with `/mcp`. The
+plugin reads it in place of `https://mcp.cloud.r1.diagrid.io/mcp` and keeps the client
+ID `claude-code`. App tunnels need a second sign-in, in the same environment and
+organization; the `diagrid-app-tunnels` skill checks that both match.
+
 ### Codex
 
 1. **Skills.** From your repository's root:
@@ -102,7 +108,7 @@ keeps updating.
 
    ```toml
    [mcp_servers.diagrid.http_headers]
-   X-Diagrid-Plugin-Version = "0.10.5"
+   X-Diagrid-Plugin-Version = "0.10.8"
    ```
 
 3. **Sign in.**
@@ -133,7 +139,7 @@ keeps updating.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.10.5" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.10.8" },
          "oauthClientId": "copilot-cli",
          "tools": ["*"]
        }
@@ -162,7 +168,7 @@ keeps updating.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.10.5" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.10.8" },
          "oauth": { "clientId": "vscode" }
        }
      }
