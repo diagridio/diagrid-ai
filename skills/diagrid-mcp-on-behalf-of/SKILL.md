@@ -22,12 +22,31 @@ both with the Diagrid identity package for its language:
 2. **Carry the caller onward.** An identity-aware HTTP client puts the caller's token on
    the MCP client's requests to the proxy.
 
-Never parse, log, store, echo or print the token, and never set the header by hand when
-the package does it. Never ask the user to paste a token.
+## Never
+
+- **Never parse, log, store, echo or print the user's token, and never ask the user to
+  paste one.** It is a live credential for that person. The package verifies it.
+- **Never set `X-Diagrid-User-Token` by hand** where the package's client does it. The
+  client clears a stale header, drops it on a redirect to another origin, and leaves it
+  off when there is no user.
+- **Never require `agent.invoke`,** or any scope the user did not name. No Diagrid Cloud
+  login carries it, so every call answers 403.
+- **Never connect the MCP client at startup.** There is no caller then, and a server that
+  requires a user refuses the `initialize` request.
+- **Never call the MCP server's own URL.** Only the proxy mints the user's token, so the
+  tool sees no user.
+- **Never promise the user on a tool call that runs as a workflow activity,** such as
+  under `diagrid-spring-ai-starter` or a durable runner. The request is over by then.
+- **Never assume `requireUser` survived a change to the policy.** Some clients' grant
+  and revoke drop it with no error, and the tool silently stops seeing the user. Read the
+  policy back after every change (section 3).
+- **Never show the token fields of a full MCP server or App ID read.** They hold the App
+  ID's API token.
 
 ## 1. Pick the language file
 
-Read the project's manifest and load the matching file. Each one has the install line,
+Read the project's manifest and load only the matching file. Do not load the others.
+Each one has the install line,
 the middleware, the MCP client wiring and the traps for that SDK:
 
 | Manifest | Load | Package |
@@ -127,10 +146,13 @@ spec:
 ```
 
 Grant the app its tools with `diagrid_grant_access`, as for any MCP server.
-
-Reading the policy back may not show `auth`, even when the setting took. The proof that
-it works is the tool seeing the user, in section 6. A full read of an MCP server or an
-App ID can include the App ID's API token. Never show those fields to the user.
+`diagrid_grant_access` and `diagrid_revoke_access` keep `auth`, and so does applying a
+policy whose manifest leaves `auth` out. Other clients' grant and revoke commands have
+been seen to drop it. The calls then still succeed, and the tool silently sees no user.
+So after any change to the server or its policy, read it again with
+`diagrid_get_access_policy`, confirm `spec.auth.spiffeJWT.requireUser` is still `true`,
+and run the proof in section 6 again. A full read of an MCP server or an App ID can
+include the App ID's API token. Never show those fields to the user.
 
 Requiring a user applies to every caller of that server, including the user's own cron
 jobs. Before you set it, check who the policy's `rules` name. If a tool must serve both
@@ -167,11 +189,9 @@ Follow the language file. In every language:
 ## 5. Read the user on the MCP server
 
 If the user also owns the MCP server, its tools read the user from the token Diagrid
-mints. It arrives in `X-Diagrid-User-Token`. `sub` is the end user and `act.sub` is the
-app acting for them. It is a standard RS256 JWT with OIDC discovery, so validate it with
-the language's JWT library. Do not fold it into the check on the `Authorization` header:
-that one proves the request came from Diagrid, and this one says whose permissions to
-apply.
+mints in `X-Diagrid-User-Token`: `sub` is the end user and `act.sub` is the app acting for
+them. Check it separately from the `Authorization` header, which only proves the request
+came from Diagrid.
 
 ## 6. Prove it
 
