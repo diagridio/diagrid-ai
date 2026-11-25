@@ -37,9 +37,9 @@ both with the Diagrid identity package for its language:
   tool sees no user.
 - **Never promise the user on a tool call that runs as a workflow activity,** such as
   under `diagrid-spring-ai-starter` or a durable runner. The request is over by then.
-- **Never assume `requireUser` survived a change to the policy.** Some clients' grant
-  and revoke drop it with no error, and the tool silently stops seeing the user. Read the
-  policy back after every change (section 3).
+- **Never assume `requireUser` survived a change to the policy.** A Diagrid CLI older
+  than v1.83.0 drops it on grant and revoke with no error, and the tool silently stops
+  seeing the user. Read the policy back after every change (section 3).
 - **Never show the token fields of a full MCP server or App ID read.** They hold the App
   ID's API token.
 
@@ -147,8 +147,9 @@ spec:
 
 Grant the app its tools with `diagrid_grant_access`, as for any MCP server.
 `diagrid_grant_access` and `diagrid_revoke_access` keep `auth`, and so does applying a
-policy whose manifest leaves `auth` out. Other clients' grant and revoke commands have
-been seen to drop it. The calls then still succeed, and the tool silently sees no user.
+policy whose manifest leaves `auth` out. A Diagrid CLI older than v1.83.0 does not know
+the field, so its grant and revoke drop it. The calls then still succeed, and the tool
+silently sees no user. If the user changes access from the CLI, ask them to update it.
 So after any change to the server or its policy, read it again with
 `diagrid_get_access_policy`, confirm `spec.auth.spiffeJWT.requireUser` is still `true`,
 and run the proof in section 6 again. A full read of an MCP server or an App ID can
