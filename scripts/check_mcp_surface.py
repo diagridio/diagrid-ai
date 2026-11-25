@@ -72,9 +72,11 @@ CLI_PROSE = re.compile(r"\bdiagrid CLI\b")
 # subcommands that installing, signing in and tunnelling need. `dev` passes only as
 # `dev run`, `dev stop` or `dev scaffold`. Every other subcommand still fails there, so
 # the skill cannot drift into doing with the CLI what a `diagrid_*` tool already does.
+# `call` passes too: no `diagrid_*` tool invokes an app, and `diagrid call invoke` is
+# how the skill proves a request reaches the tunnelled process through Diagrid.
 TUNNEL_SKILL = Path("skills") / "diagrid-app-tunnels"
 TUNNEL_EVAL_PREFIX = "tunnel-"
-TUNNEL_SUBCOMMANDS = frozenset({"version", "login", "whoami", "listen"})
+TUNNEL_SUBCOMMANDS = frozenset({"version", "login", "whoami", "listen", "call"})
 TUNNEL_DEV_SUBCOMMAND = re.compile(r"`?\s+(?:run|stop|scaffold)(?![\w-])")
 
 

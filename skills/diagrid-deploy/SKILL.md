@@ -96,6 +96,27 @@ traffic by **topic** on the one broker and by **key prefix** in the one store. D
 that from the start; presenting it as a limitation to work around produces a design that
 cannot be built. Read `diagrid_get_usage` for every other figure rather than quoting one.
 
+**The managed pub/sub also caps its topics, and `diagrid_get_usage` does not show that
+cap.** A subscriber that would create one topic too many fails at startup with
+`topic cannot be created, max topics reached, max allowed N`. Topics left by earlier runs
+count, even with no subscribers, so a user who has tried a quickstart or two can already
+be at the cap. Some frameworks subscribe on their own: Dapr Agents subscribes to the
+managed `agent-pubsub` at startup, one topic per agent, even when the code uses no
+pub/sub. No `diagrid_*` tool lists or deletes topics. When you see that error, tell the
+user the broker is at its topic cap, and ask them to remove the topics they no longer use
+before you start the app again.
+
+### At a cap already
+
+When `diagrid_get_usage` shows `used` equal to `limit` for something you need, stop
+before creating anything and say which cap it is, with both numbers. List what uses it:
+for identities, `diagrid_list_apps`, `diagrid_list_agents` and `diagrid_list_mcp_servers`
+in each project, with each one's status. Then ask the user which way to go: delete
+something they no longer use, or contact Diagrid support for more headroom. Never reuse
+an existing app's or agent's identity for something else to fit under the cap: it runs
+your code under another resource's name, token and access policy. Do it only if the user
+asks for it, after you have said what it means.
+
 Finally, headroom is not the only per-region property. Managed pub/sub, managed KV and
 the Workflows API are **regional capabilities**, and a region that lacks one gives you a
 project where that API simply is not available. `diagrid_get_region` says what the region
@@ -120,15 +141,17 @@ from it.
 **Names are unique across three resource types in a project.** Creating an agent whose
 name is taken by an app fails with *"the name ... is already in use in project ...; App,
 Agent and MCP server names must be unique within a project"*. Pick the name once, for the
-right resource type, and check `diagrid_list_apps` and `diagrid_list_agents` before you
-do.
+right resource type, and check `diagrid_list_apps`, `diagrid_list_agents` and
+`diagrid_list_mcp_servers` before you do: `diagrid_list_apps` does not list agents or MCP
+servers. A `dry_run` that says `would_replace` for a name held by another kind does not
+mean the name is free; the real apply is refused. Pick another name.
 
 ### Which kind to apply
 
 | Deploying | Kind | Who owns the identity |
 | --- | --- | --- |
-| Your own application | `App` | The app you just made |
-| An agent whose code you run yourself | `Agent` | The agent provisions and manages its own |
+| Your own application, other than an agent | `App` | The app you just made |
+| An agent whose code you run yourself, written with any framework or none | `Agent` | The agent provisions and manages its own |
 | An MCP server | `MCPServer` | The MCP server, likewise |
 
 Read `diagrid_get_resource_schema` for the fields each takes. An `App` takes an
@@ -145,6 +168,24 @@ delivery stay blocked.
 `Agent` fronts an agent your application runs. An application that runs itself — locally,
 in a container, anywhere — uses **`Agent`** for that. There are no model settings on it,
 and looking for one is the signal that you have the wrong resource.
+
+### An agent the user already has
+
+When the user asks to deploy or run an agent they already wrote, Diagrid does not host or
+run the code. The process keeps running where the user runs it, and Diagrid reaches it
+through an app tunnel. The agent's code does not change: do not wrap it in a workflow or
+add a Dapr SDK unless the user asks.
+
+1. Apply an `Agent`, not an `App`, after checking that the name is free (above).
+2. Read its App ID with `diagrid_get_app` until it is `ready`. The `Agent`'s own status
+   is not enough (section 5).
+3. Open the tunnel with the user's own start command and the port the agent serves on
+   (`diagrid-app-tunnels` section 3).
+4. Once the identity is `ready` again after the tunnel attaches (section 5), prove
+   that a request arrives through Diagrid (`diagrid-app-tunnels`, "Proving a
+   request arrives"), and report the agent's own answer.
+5. Tell the user that Diagrid reaches the agent only while `dev run` runs, and how to
+   stop it.
 
 ## 3. Ordering constraints, and the mechanism behind each
 
@@ -178,11 +219,12 @@ Managed services have fixed names — `pubsub` for the broker, `kvstore` for the
 The managed workflow store is wired in implicitly and has **no component name**, so do not
 go looking for one.
 
-Access between applications is a separate control from both, and it is deny-by-default:
-a caller that no policy names is refused. Grant it with `diagrid_grant_access`, and take
-it away with `diagrid_revoke_access`. Read the current policy first with
-`diagrid_get_access_policy`: the first grant on an App with no policy creates one that
-denies everyone else. Both directions change who can reach the app, so say what will
+Access between applications is a separate control from both. With no policy on the
+target, every app in the project can call it. Once the target has a policy, it is
+deny-by-default: a caller the policy does not name is refused. Grant access with
+`diagrid_grant_access`, and take it away with `diagrid_revoke_access`. Read the current
+policy first with `diagrid_get_access_policy`: the first grant on an App with no policy
+creates one that denies everyone else. Both directions change who can reach the app, so say what will
 change and get the user's agreement before either call: a grant can widen access to
 every caller (`*`), and a revoke breaks the caller's calls as soon as the policy reaches
 the sidecar.
@@ -227,7 +269,7 @@ the field as a bare string, so **report the value you were given verbatim** rath
 rounding it to one of the nine. Agents report from a narrower set — `ready`, `error`,
 `pending`, or empty before their first reconcile.
 
-Four readings that mislead if taken alone:
+Six readings that mislead if taken alone:
 
 - **A component's real reason lives under `status.appIdStatus[]`.** A component that fails
   to load is only reported as such by the sidecar of each scoped identity, so the
@@ -241,13 +283,22 @@ Four readings that mislead if taken alone:
   the sidecar reconfigure, so the identity goes `ready` → `updating` → `ready`.
 - **A missing local connection is not an error.** It means nobody is running that app
   from a machine right now. `diagrid_list_app_tunnels` lists the ones that are.
+- **An agent's `ready` is not its identity's.** `diagrid_get_agent` can say `ready` while
+  the identity under `status.appIds` is still `processing`. Read the identity with
+  `diagrid_get_app` and go on only when it is `ready`.
+- **Connected is not serving.** The first request after a tunnel attaches can fail with
+  502 `context canceled` while the identity goes `updating` → `ready`, and
+  `diagrid_get_connection` refuses for that minute too. Wait until the identity is
+  `ready` again, then send the first request; if that one fails the same way, retry it
+  once before calling it broken.
 
 Then prove the path rather than trusting the status. For a workflow app, start a run with
 `diagrid_start_workflow` and read it back with `diagrid_get_workflow_run`; that
 separates the platform from the application. `diagrid_get_metrics` shows whether the app
-has served or sent anything. Invoking the app directly, publishing a test message and
-reading state back are not available over MCP yet; say so rather than claiming you
-checked them.
+has served or sent anything. Invoking an app or agent is not available over MCP; for
+one behind an app tunnel, use the CLI call in `diagrid-app-tunnels` ("Proving a request
+arrives"). Publishing a test message and reading state back are not available over MCP
+yet; say so rather than claiming you checked them.
 
 The API token of an app, agent or MCP server is the credential for that identity. No read tool returns it; only
 `diagrid_get_connection` does (see `diagrid-develop` section 3). Do not ask the user

@@ -256,6 +256,10 @@ What to check:
    When it really is 1, say so as a platform default and describe the shape that works:
    one broker, many topics; one store, many keys. Do not call it a free-tier limit and do
    not suggest an upgrade — no plan upgrade raises it.
+4. If an app or agent fails at startup with `max topics reached`, the managed pub/sub is at
+   its topic cap, which `diagrid_get_usage` does not show. Topics left by earlier runs are
+   the usual cause. See `diagrid-deploy` section 1: tell the user, and ask them to remove
+   the topics they no longer use.
 
 An MCP server is the same shape of problem with one extra trap: a **disabled** MCP server
 reports `ready`, because disabled is a fully reconciled state. Its message says it is
