@@ -66,7 +66,10 @@ McpSyncClient connect() {
   var transport = HttpClientStreamableHttpTransport.builder(System.getenv("DAPR_HTTP_ENDPOINT"))
       .endpoint("/v1.0/diagrid/mcp/crm-mcp")
       .httpRequestCustomizer((request, method, uri, body, context) -> {
-        request.header("dapr-api-token", System.getenv("DAPR_API_TOKEN"));
+        String daprApiToken = System.getenv("DAPR_API_TOKEN");
+        if (daprApiToken != null && !daprApiToken.isEmpty()) {
+          request.header("dapr-api-token", daprApiToken);
+        }
         Object token = context == null ? null : context.get(TOKEN_KEY);
         if (token instanceof String raw && !raw.isEmpty()) {
           request.header(IdentityContext.USER_TOKEN_HEADER, IdentityContext.BEARER_PREFIX + raw);
@@ -81,16 +84,40 @@ McpSyncClient connect() {
             : McpTransportContext.create(Map.of(TOKEN_KEY, token));
       })
       .build();
-  client.initialize();
+  try {
+    client.initialize();
+  } catch (RuntimeException e) {
+    client.close();
+    throw e;
+  }
   return client;
+}
+
+private final Object mcpLock = new Object();
+private volatile McpSyncClient mcpClient;
+
+// Call from the request handler, never at startup.
+McpSyncClient mcp() {
+  McpSyncClient existing = mcpClient;
+  if (existing != null) {
+    return existing;
+  }
+  synchronized (mcpLock) {
+    if (mcpClient == null) {
+      mcpClient = connect();   // set only after initialize() succeeded
+    }
+    return mcpClient;
+  }
 }
 ```
 
 This is the one place the header is set in app code, because the identity package cannot
 reach the MCP SDK's threads. It uses the package's own constants and token, and does
-nothing else with the token. Build the client on the first request that needs it, never
-at startup, because `initialize()` is itself an MCP request and needs a caller. Then share
-it: each call captures its own caller.
+nothing else with the token. Get the client through `mcp()`, from the request handler,
+never at startup, because `initialize()` is itself an MCP request and needs a caller.
+`mcp()` builds one client under a lock and keeps it only after `initialize()` succeeds, so
+two first requests at once do not build two, and a failed one is retried on the next
+request. The client is then shared: each call captures its own caller.
 
 For calls through Spring's `RestClient`, such as a sub-agent, use the package's
 `IdentityClientHttpRequestInterceptor`. For a plain `java.net.http.HttpClient`, use
