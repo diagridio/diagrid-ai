@@ -108,7 +108,7 @@ organization; the `diagrid-app-tunnels` skill checks that both match.
 
    ```toml
    [mcp_servers.diagrid.http_headers]
-   X-Diagrid-Plugin-Version = "0.10.8"
+   X-Diagrid-Plugin-Version = "0.10.9"
    ```
 
 3. **Sign in.**
@@ -139,7 +139,7 @@ organization; the `diagrid-app-tunnels` skill checks that both match.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.10.8" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.10.9" },
          "oauthClientId": "copilot-cli",
          "tools": ["*"]
        }
@@ -168,7 +168,7 @@ organization; the `diagrid-app-tunnels` skill checks that both match.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.10.8" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.10.9" },
          "oauth": { "clientId": "vscode" }
        }
      }
