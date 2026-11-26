@@ -30,7 +30,8 @@ builder.Services.AddDiagridIdentity();   // issuer, audience and keys are discov
 var app = builder.Build();
 app.UseDiagridIdentity();
 
-app.MapPost("/agent/run", (HttpContext context) =>
+app.MapPost("/agent/run", async (
+    HttpContext context, IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory) =>
 {
     var user = context.GetVerifiedUser()!;   // never null while RequireAuth is on
     ...

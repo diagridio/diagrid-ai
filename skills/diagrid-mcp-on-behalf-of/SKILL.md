@@ -180,9 +180,10 @@ Follow the language file. In every language:
   may use its sidecar. The identity client adds `X-Diagrid-User-Token`, which says whose
   behalf it acts on. Add the first yourself and never the second.
 - **Open the MCP session while the inbound request is being handled**, so the caller's
-  context is there for every MCP request, the `initialize` handshake included. A client
-  object shared across requests is fine when it reads the caller per request, as each
-  language file shows.
+  context is there for every MCP request, the `initialize` handshake included. The
+  identity-aware HTTP client can be shared across requests, because it reads the caller
+  per request. The MCP session cannot: it belongs to the user who opened it, so open one
+  per request and close it when the handler is done.
 
 ## 5. Read the user on the MCP server
 

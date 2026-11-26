@@ -79,7 +79,7 @@ func accountSummary(ctx context.Context, client *http.Client, accountID string) 
 		return "", err
 	}
 	if result.IsError {
-		return "", fmt.Errorf("account_summary failed")
+		return "", fmt.Errorf("account_summary was refused")
 	}
 	for _, content := range result.Content {
 		if text, ok := content.(*mcp.TextContent); ok {
