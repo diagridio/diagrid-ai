@@ -1,7 +1,79 @@
 # Python
 
-`dapr` and `dapr-ext-workflow`. Signatures below were read from the SDK source at
-1.17.3.
+Install the latest `dapr[workflow]`, 1.19.0 or later. The current version and the API are in
+[the Python workflow SDK docs](https://docs.dapr.io/developing-applications/sdks/python/python-sdk-extensions/python-workflow-ext/).
+From 1.19 the workflow SDK ships inside `dapr`, under
+`dapr.ext.workflow`. The separate `dapr-ext-workflow` distribution stops at 1.18.3, so do
+not add it to a 1.19 project.
+
+```toml
+[project]
+requires-python = ">=3.10"
+dependencies = ["dapr[workflow]>=1.19.0"]
+```
+
+This worker ran against Diagrid with the three connection values in its environment
+(`diagrid-develop` section 3). It registers the workflow, starts one run, waits for it
+and exits.
+
+```python
+from dataclasses import dataclass
+
+import dapr.ext.workflow as wf
+
+wfr = wf.WorkflowRuntime()
+
+
+@dataclass
+class Order:
+    id: str
+    quantity: int
+
+
+@wfr.workflow(name="order_workflow")
+def order_workflow(ctx: wf.DaprWorkflowContext, order: Order):
+    reserved = yield ctx.call_activity(reserve, input=order)
+    return f"order {order.id}: {reserved}"
+
+
+@wfr.activity(name="reserve")
+def reserve(ctx: wf.WorkflowActivityContext, order: Order) -> str:
+    return f"reserved {order.quantity}"
+
+
+if __name__ == "__main__":
+    wfr.start()
+    client = wf.DaprWorkflowClient()
+    run_id = client.schedule_new_workflow(workflow=order_workflow, input=Order("o-1", 2))
+    state = client.wait_for_workflow_completion(run_id, timeout_in_seconds=60)
+    print(run_id, state.runtime_status.name, state.serialized_output)
+    wfr.shutdown()
+```
+
+A long-running worker keeps the process alive after `wfr.start()` instead of scheduling a
+run itself.
+
+## Starting it from outside the app
+
+- **Name:** the `name=` in `@wfr.workflow`, here `order_workflow`. Without it, the
+  function name.
+- **Input:** the SDK turns a JSON object back into an object with attributes only when
+  the object carries `"__durabletask_autoobject__": true`. It adds that key itself when
+  the app passes a dataclass, as above. `diagrid_start_workflow` sends plain JSON, so the
+  workflow gets a `dict`, and `order.id` fails with `'dict' object has no attribute
+  'id'`.
+  - For a workflow that reads attributes, add the key to the input:
+    `{"__durabletask_autoobject__": true, "id": "o-2", "quantity": 3}`.
+  - For new code that will be started from outside, take a `dict` and read keys
+    (`order["id"]`), which works from every caller.
+  - Ints, strings and lists need nothing extra.
+
+## Constructs
+
+The orchestrator below shows a branch, a parallel join and an event raced against a
+timer, which are the shapes a diagram turns into. This section and the next two are
+adapted from `prompts/languages/python.md` in
+[diagrid-labs/dapr-skills](https://github.com/diagrid-labs/dapr-skills) (MIT).
 
 ```python
 from datetime import timedelta
@@ -74,10 +146,9 @@ without the `yield` takes the same branch every time and nothing errors.
 each task before racing them, then test `winner is deadline`. Comparing results instead
 breaks the moment two branches can return the same value.
 
-**`wait_for_external_event` has no timeout argument** at 1.17.3. An event-or-timeout
-from the diagram is a `when_any` over the event and a `create_timer`, which is also the
-shape that lets you tell the two outcomes apart. Newer checkouts add a `timeout=`
-keyword — do not emit it unless the target version has it.
+**Race an event against a timer with `when_any`.** `wait_for_external_event` also
+takes `timeout=` and raises `TimeoutError`, but the `when_any` over the event and a
+`create_timer`, as above, tells the two outcomes apart without an exception.
 
 **The activity context is not the workflow context.** It exposes `ctx.workflow_id` and
 `ctx.task_id`, and there is no `instance_id` on it. Key idempotency on

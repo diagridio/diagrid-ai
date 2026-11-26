@@ -4,11 +4,11 @@ Phase 4. The IR has passed validation, so every id resolves, every label is uniq
 nothing is orphaned. What is left is a graph, and the job is to turn it into an
 orchestrator that a reader can hold against the diagram.
 
-> The per-language sections are adapted from `prompts/languages/*.md` in
-> [diagrid-labs/dapr-skills](https://github.com/diagrid-labs/dapr-skills) (MIT). Their
-> serialization findings are the load-bearing part and are kept. The record-to-construct
-> mapping and the connectivity pass are new — upstream had no language-neutral layer,
-> which is how the same rule came to be stated five times and differently.
+> The per-language files this skill used to carry, adapted from `prompts/languages/*.md`
+> in [diagrid-labs/dapr-skills](https://github.com/diagrid-labs/dapr-skills) (MIT), now
+> live in `diagrid-workflow-scaffold`. The record-to-construct mapping and the
+> connectivity pass are new — upstream had no language-neutral layer, which is how the
+> same rule came to be stated five times and differently.
 
 ## Order of work
 
@@ -159,19 +159,14 @@ has once the diagram has gone back to being a photo in someone's phone.
 
 ## Per language
 
-| Language | Package | Signatures |
-| --- | --- | --- |
-| Python | `dapr`, `dapr-ext-workflow` | [languages/python.md](languages/python.md) |
-| .NET | `Dapr.Workflow` | [languages/dotnet.md](languages/dotnet.md) |
-| Java | `io.dapr:dapr-sdk-workflows` | [languages/java.md](languages/java.md) |
-| Go | `github.com/dapr/durabletask-go` | [languages/go.md](languages/go.md) |
-| TypeScript / JavaScript | `@dapr/dapr` | [languages/javascript.md](languages/javascript.md) |
+Load `diagrid-workflow-scaffold` and read its file for the language:
+`reference/python.md`, `reference/dotnet.md`, `reference/java.md`, `reference/go.md` or
+`reference/typescript.md`. Each has the package, its minimum version, a link to the SDK
+docs, a worker that ran against Diagrid, the spellings and the traps.
 
-Resolve the version against the registry before writing it into a manifest, and if you
-cannot, name the package without one. A coordinate that 404s sends the user hunting for
-a Diagrid problem that does not exist, and `Dapr.Workflow` has shipped a preview ahead
-of stable before, so newest is not the same as newest stable. There is no Diagrid
-workflow package on any registry, in any language — a workflow needs the Dapr SDK.
+`Dapr.Workflow` has shipped a preview ahead of stable before, so newest is not the same
+as newest stable. There is no Diagrid workflow package on any registry, in any
+language — a workflow needs the Dapr SDK.
 
 ### The differences that cross-contaminate
 
