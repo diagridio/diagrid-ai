@@ -56,14 +56,15 @@ builder.Services.AddDiagridIdentityHttpClient(configure: client =>
 });
 ```
 
-Then build the MCP client on it, inside the request. The handler gets
-`IHttpClientFactory` and `ILoggerFactory` by injection:
+Then build the MCP client on it, inside the request. Call this from the handler above,
+which gets `IHttpClientFactory` and `ILoggerFactory` by injection:
 
 ```csharp
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-app.MapPost("/agent/run", async (IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory) =>
+static async Task<string> AccountSummary(
+    IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory, string accountId)
 {
     var http = httpClientFactory.CreateClient(
         DiagridIdentityHttpClientServiceCollectionExtensions.DefaultClientName);
@@ -80,10 +81,13 @@ app.MapPost("/agent/run", async (IHttpClientFactory httpClientFactory, ILoggerFa
 
     await using var client = await McpClient.CreateAsync(transport, loggerFactory: loggerFactory);
     var result = await client.CallToolAsync(
-        "account_summary", new Dictionary<string, object?> { ["account_id"] = "ACME-1" });
-    var text = result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text;
-    ...
-});
+        "account_summary", new Dictionary<string, object?> { ["account_id"] = accountId });
+    if (result.IsError == true)
+    {
+        throw new InvalidOperationException("account_summary was refused");
+    }
+    return result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text ?? "";
+}
 ```
 
 The argument names are the tool's own, from its schema. They are not converted to C#

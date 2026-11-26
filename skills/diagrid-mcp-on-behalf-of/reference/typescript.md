@@ -58,7 +58,11 @@ export async function accountSummary(accountId: string): Promise<string> {
   await client.connect(transport);
   try {
     const answer = await client.callTool({ name: 'account_summary', arguments: { account_id: accountId } });
-    ...
+    if (answer.isError) {
+      throw new Error('account_summary was refused');
+    }
+    const [first] = answer.content as Array<{ type: string; text?: string }>;
+    return first?.text ?? '';
   } finally {
     await client.close();
   }
