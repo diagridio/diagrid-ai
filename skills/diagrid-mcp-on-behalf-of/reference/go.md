@@ -52,7 +52,9 @@ type apiTokenTransport struct{ token string }
 
 func (t apiTokenTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	clone := req.Clone(req.Context())   // a RoundTripper must not modify its request
-	clone.Header.Set("dapr-api-token", t.token)
+	if t.token != "" {
+		clone.Header.Set("dapr-api-token", t.token)
+	}
 	return http.DefaultTransport.RoundTrip(clone)
 }
 

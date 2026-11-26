@@ -53,13 +53,16 @@ from mcp.client.streamable_http import streamable_http_client
 MCP_URL = f"{os.environ['DAPR_HTTP_ENDPOINT']}/v1.0/diagrid/mcp/crm-mcp"
 
 # One shared client is safe: it reads the caller when each request is sent.
-mcp_http = AsyncClient(headers={"dapr-api-token": os.environ.get("DAPR_API_TOKEN", "")})
+dapr_api_token = os.environ.get("DAPR_API_TOKEN")
+mcp_http = AsyncClient(headers={"dapr-api-token": dapr_api_token} if dapr_api_token else {})
 
 async def account_summary(account_id: str) -> str:
     async with streamable_http_client(MCP_URL, http_client=mcp_http) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
             result = await session.call_tool("account_summary", {"account_id": account_id})
+            if result.isError:
+                raise RuntimeError("account_summary was refused")
             return result.content[0].text
 ```
 

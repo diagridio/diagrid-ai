@@ -62,17 +62,16 @@ fill the gap.
 ## 2. Know what carries the user and what does not
 
 The caller's token lives in request-scoped context while the inbound request is being
-handled. Anything the handler sends with the identity-aware client, while that request is
-still open, carries the user:
+handled. Only one kind of call carries the user today: an **MCP tool call through the
+proxy**, at `$DAPR_HTTP_ENDPOINT/v1.0/diagrid/mcp/<server>`, sent with the identity-aware
+client while that request is still open.
 
-- **MCP tool calls through the proxy**, at `$DAPR_HTTP_ENDPOINT/v1.0/diagrid/mcp/<server>`.
-  This is the main use.
-- **Calls to sub-agents** through the app's own sidecar. The client adds the header, but
-  this has not been tested end to end. Before relying on it, show that the sub-agent's
-  own middleware reports the same verified user.
+These do not carry the user yet. Say so plainly when the user asks for one, and do not
+wire something that looks like it works:
 
-These do not carry the user. Say so plainly when the user asks for one, and do not wire
-something that looks like it works:
+- **Calls to sub-agents, other apps or internal services,** by service invocation or plain
+  HTTP. Diagrid does not pass the user on these calls yet, so do not put the identity
+  client on them.
 
 - **A tool call that runs as a workflow activity.** A durable agent runner, the
   `diagrid-spring-ai-starter`, and go-ai's runner, `agent` and `mcp` packages all run

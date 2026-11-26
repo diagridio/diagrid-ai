@@ -58,6 +58,7 @@ import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.common.McpTransportContext;
+import io.modelcontextprotocol.spec.McpSchema;
 import java.net.http.HttpClient;
 import java.util.Map;
 
@@ -96,36 +97,30 @@ McpSyncClient connect() {
   return client;
 }
 
-private final Object mcpLock = new Object();
-private volatile McpSyncClient mcpClient;
-
 // Call from the request handler, never at startup.
-McpSyncClient mcp() {
-  McpSyncClient existing = mcpClient;
-  if (existing != null) {
-    return existing;
-  }
-  synchronized (mcpLock) {
-    if (mcpClient == null) {
-      mcpClient = connect();   // set only after initialize() succeeded
+String accountSummary(String accountId) {
+  McpSyncClient client = connect();   // one MCP session per inbound request
+  try {
+    var result = client.callTool(new McpSchema.CallToolRequest(
+        "account_summary", Map.of("account_id", accountId)));
+    if (Boolean.TRUE.equals(result.isError())) {
+      throw new IllegalStateException("account_summary was refused");
     }
-    return mcpClient;
+    return ((McpSchema.TextContent) result.content().get(0)).text();
+  } finally {
+    client.close();
   }
 }
 ```
 
 This is the one place the header is set in app code, because the identity package cannot
 reach the MCP SDK's threads. It uses the package's own constants and token, and does
-nothing else with the token. Get the client through `mcp()`, from the request handler,
-never at startup, because `initialize()` is itself an MCP request and needs a caller.
-`mcp()` builds one client under a lock and keeps it only after `initialize()` succeeds, so
-two first requests at once do not build two, and a failed one is retried on the next
-request. The client is then shared: each call captures its own caller.
-
-For calls through Spring's `RestClient`, such as a sub-agent, use the package's
-`IdentityClientHttpRequestInterceptor`. For a plain `java.net.http.HttpClient`, use
-`IdentityHttpClient.newHttpClient()`. Both read the `ThreadLocal`, so they work only on
-the request thread.
+nothing else with the token. Call `connect()` from the request handler, never at startup,
+because `initialize()` is itself an MCP request and needs a caller. Open one session per
+inbound request and close it when the handler is done, as the other languages do. Do not
+share one client across requests: its MCP session belongs to the user who opened it, and a
+server that ties the session to that user would refuse the next caller or credit their
+calls to the first one.
 
 ## Traps
 

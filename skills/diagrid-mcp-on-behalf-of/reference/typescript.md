@@ -47,11 +47,12 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 
 const MCP_URL = `${process.env['DAPR_HTTP_ENDPOINT']}/v1.0/diagrid/mcp/crm-mcp`;
 const identityFetch = createIdentityFetch();   // safe to share: reads the caller per request
+const daprApiToken = process.env['DAPR_API_TOKEN'];
 
 export async function accountSummary(accountId: string): Promise<string> {
   const transport = new StreamableHTTPClientTransport(new URL(MCP_URL), {
     fetch: identityFetch,
-    requestInit: { headers: { 'dapr-api-token': process.env['DAPR_API_TOKEN'] ?? '' } },
+    requestInit: { headers: daprApiToken ? { 'dapr-api-token': daprApiToken } : {} },
   });
   const client = new Client({ name: 'my-agent', version: '1.0.0' });
   await client.connect(transport);

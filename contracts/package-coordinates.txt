@@ -31,7 +31,7 @@ pypi   dapr                                            >=1.19.0
 pypi   dapr-ext-workflow                               -
 
 npm    @diagrid/agent-mastra                           0.2.0
-npm    @diagrid/agent-core                             -
+npm    @diagrid/agent-core                             >=0.2.0
 npm    @dapr/dapr                                      >=3.19.0
 npm    @dapr/durabletask-js                            -
 npm    @mastra/core                                    -
