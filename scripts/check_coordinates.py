@@ -37,6 +37,7 @@ SKILLS = REPO / "skills"
 ECOSYSTEMS = ("pypi", "npm", "nuget", "maven", "go")
 ABSENT = "absent"
 UNVERSIONED = "-"
+MINIMUM = ">="
 TIMEOUT_SECONDS = 30
 ATTEMPTS = 3
 
@@ -62,7 +63,12 @@ class RegistryUnreachable(Exception):
 class Entry:
     ecosystem: str
     coordinate: str
-    version: str  # a version, UNVERSIONED or ABSENT
+    version: str  # a version, MINIMUM + a version, UNVERSIONED or ABSENT
+
+    @property
+    def quoted(self) -> str:
+        """The version as the skills write it, without the minimum marker."""
+        return self.version.removeprefix(MINIMUM)
 
 
 @dataclass(frozen=True)
@@ -122,10 +128,10 @@ def agreement_problems(entries: list[Entry], texts: list[str]) -> list[str]:
         if entry.coordinate not in corpus:
             problems.append(f"{entry.ecosystem} {entry.coordinate}: listed, but no skill mentions it — remove the line")
         elif entry.version not in (UNVERSIONED, ABSENT) and not any(
-            entry.coordinate in line and entry.version in line for line in lines
+            entry.coordinate in line and entry.quoted in line for line in lines
         ):
             problems.append(
-                f"{entry.ecosystem} {entry.coordinate}: listed at {entry.version}, but no skill line quotes that version beside it"
+                f"{entry.ecosystem} {entry.coordinate}: listed at {entry.quoted}, but no skill line quotes that version beside it"
             )
     for ecosystem, coordinate in sorted(scan_skills(texts)):
         if not covered(ecosystem, coordinate, entries):
@@ -153,10 +159,10 @@ def registry_problems(entries: list[Entry], lookup: Callable[[Entry], Lookup], s
             continue
         if entry.version == UNVERSIONED:
             continue
-        if entry.version not in result.versions:
-            problems.append(f"{label}: the skills quote {entry.version}, which the registry does not have")
-        elif strict_versions and result.latest and result.latest != entry.version:
-            problems.append(f"{label}: the skills quote {entry.version}, and {result.latest} is out — update the skill")
+        if entry.quoted not in result.versions:
+            problems.append(f"{label}: the skills quote {entry.quoted}, which the registry does not have")
+        elif strict_versions and result.latest and result.latest != entry.quoted:
+            problems.append(f"{label}: the skills quote {entry.quoted}, and {result.latest} is out — update the skill")
     return problems
 
 
