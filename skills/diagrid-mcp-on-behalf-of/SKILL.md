@@ -147,10 +147,9 @@ spec:
 ```
 
 Grant the app its tools with `diagrid_grant_access`, as for any MCP server.
-`diagrid_grant_access` and `diagrid_revoke_access` keep `auth`, and so does applying a
-policy whose manifest leaves `auth` out. A Diagrid CLI older than v1.83.0 does not know
-the field, so its grant and revoke drop it. The calls then still succeed, and the tool
-silently sees no user. So after any change to the server or its policy, read it again
+`diagrid_grant_access` and `diagrid_revoke_access` keep `auth`. A Diagrid CLI older than
+v1.83.0 does not know the field, so its grant and revoke drop it. The calls then still
+succeed, and the tool silently sees no user. So after any change to the server or its policy, read it again
 with `diagrid_get_access_policy`, confirm `spec.auth.spiffeJWT.requireUser` is still
 `true`, and run the proof in section 6 again. If the user changes access from the CLI,
 ask them to update it.

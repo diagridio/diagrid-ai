@@ -58,6 +58,7 @@ import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.common.McpTransportContext;
+import java.net.http.HttpClient;
 import java.util.Map;
 
 static final String TOKEN_KEY = "diagrid.userToken";
@@ -65,6 +66,8 @@ static final String TOKEN_KEY = "diagrid.userToken";
 McpSyncClient connect() {
   var transport = HttpClientStreamableHttpTransport.builder(System.getenv("DAPR_HTTP_ENDPOINT"))
       .endpoint("/v1.0/diagrid/mcp/crm-mcp")
+      // Never follow a redirect: it would send the user's token to another origin.
+      .customizeClient(client -> client.followRedirects(HttpClient.Redirect.NEVER))
       .httpRequestCustomizer((request, method, uri, body, context) -> {
         String daprApiToken = System.getenv("DAPR_API_TOKEN");
         if (daprApiToken != null && !daprApiToken.isEmpty()) {
