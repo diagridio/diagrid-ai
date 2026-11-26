@@ -224,7 +224,21 @@ user's code already uses it, say so and move it to the proxy.
 ## 10. Hand back a link, not a claim
 
 Once the agent exists, give the user a console link rather than asking them to trust the
-transcript. The console for the production server is `https://catalyst.diagrid.io`. Only these routes exist:
+transcript.
+
+Print each link in this format, with an empty line before and after it:
+
+```
+Open the agent in the Diagrid console:
+
+  https://catalyst.diagrid.io/<route from the table below>
+```
+
+The first line says what the link opens. The URL goes alone on its own line, indented two
+spaces, with nothing before or after it. Do not write it as a markdown link with a label,
+because the Claude Code terminal shows only the label, and do not wrap it in backticks.
+
+The console for the production server is `https://catalyst.diagrid.io`. Only these routes exist:
 
 | To show | Route |
 | --- | --- |
