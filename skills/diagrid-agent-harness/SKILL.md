@@ -250,7 +250,7 @@ so keep tool signatures backward compatible or version the tool name.
 
 The loop needs the Dapr Workflow SDK for its language and no Diagrid package:
 `dapr-ext-workflow`, `@dapr/dapr`, `github.com/dapr/durabletask-go`, `Dapr.Workflow` or
-`io.dapr:dapr-sdk-workflows`. Section 2 of `diagrid-workflow-scaffold` has the versions
+`io.dapr:dapr-sdk-workflows`. The language files of `diagrid-workflow-scaffold` have the versions
 and the coordinate traps. Any Dapr 1.18 sidecar runs it. On a laptop that is `dapr init`
 once, then the worker under `dapr run --app-id <app-id> -- <run command>` with no app
 port: a worker dials its sidecar and polls for work, so it has nothing to listen on.

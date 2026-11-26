@@ -9,47 +9,34 @@ Goal: end this skill with a workflow registered, started once against Diagrid, a
 status read back. Code that compiles but was never started is not a scaffold — most of
 what goes wrong here goes wrong on the first real run.
 
-## 1. Detect the language, do not ask for it
+## 1. Detect the language, then load its file
 
-Language is a parameter of this skill, not a variant of it. Read the repository first.
+Language is a parameter of this skill, not a variant of it. Read the repository first,
+then load the one file for that language. Each holds the packages and their minimum
+versions, a link to the SDK docs for the current version and API, a minimal worker that was run against Diagrid, the workflow name and input shape to start
+it with, and the traps found on real runs.
 
-| Found at the top level | Language | Workflow SDK |
-| --- | --- | --- |
-| `pyproject.toml`, `requirements.txt`, `*.py` | Python | `dapr` + `dapr-ext-workflow` |
-| `*.csproj`, `*.sln`, `global.json` | .NET | `Dapr.Workflow` |
-| `pom.xml`, `build.gradle` | Java | `io.dapr:dapr-sdk-workflows` |
-| `go.mod` | Go | `github.com/dapr/durabletask-go` |
-| `package.json`, `tsconfig.json` | TypeScript / JavaScript | `@dapr/dapr` |
+| Found at the top level | Language | File | Minimum version |
+| --- | --- | --- | --- |
+| `pyproject.toml`, `requirements.txt`, `*.py` | Python | [reference/python.md](reference/python.md) | `dapr[workflow]` 1.19.0 or later |
+| `*.csproj`, `*.sln`, `global.json` | .NET | [reference/dotnet.md](reference/dotnet.md) | `Dapr.Workflow` 1.19.1 or later |
+| `pom.xml`, `build.gradle` | Java | [reference/java.md](reference/java.md) | `io.dapr:dapr-sdk-workflows` 1.19.1 or later |
+| `go.mod` | Go | [reference/go.md](reference/go.md) | `github.com/dapr/go-sdk` v1.16.0 or later |
+| `package.json`, `tsconfig.json` | TypeScript / JavaScript | [reference/typescript.md](reference/typescript.md) | `@dapr/dapr` 3.19.0 or later |
+| `Cargo.toml` | Rust | none | Not supported: the Rust SDK's workflow worker cannot connect to Diagrid. Say so and stop |
 
 Ask only when the directory is empty, or when two of these sit side by side and the
 workflow could plausibly live in either. Guessing produces a project that will not build.
 
 ## 2. Add the Dapr SDK, not a Diagrid adapter
 
-A Dapr Workflow needs the Dapr SDK for the detected language. All five are published.
-The Diagrid `*-ai` packages are agent-framework bridges and are not needed here — they
-belong to the agent-scaffolding path.
+A Dapr Workflow needs the Dapr SDK for the detected language, at the version in its
+file. The Diagrid `*-ai` packages are agent-framework bridges and are not needed here —
+they belong to the agent-scaffolding path. There is no Diagrid workflow package on any
+registry, so do not invent one: `Diagrid.Agents.Workflow` does not exist.
 
-| Language | Coordinate | Newest verified stable |
-| --- | --- | --- |
-| Python | `dapr`, `dapr-ext-workflow` | 1.18.3 |
-| .NET | `Dapr.Workflow` | 1.18.5 |
-| Java | `io.dapr:dapr-sdk-workflows` | 1.18.1 |
-| Go | `github.com/dapr/durabletask-go` | v0.14.0 |
-| TypeScript | `@dapr/dapr` | 3.18.0 |
-
-Three coordinate traps, each of which has already bitten someone:
-
-- **Go workflow authoring is not in `github.com/dapr/go-sdk/workflow`.** That package
-  existed in go-sdk v1.10.0 through v1.13.0 and was **removed in v1.14.0**, which is why
-  stale tutorials still tell you to import it and why `go get` on it fails today. Import
-  `github.com/dapr/durabletask-go/workflow` for authoring and
-  `github.com/dapr/go-sdk/client` for the Dapr APIs.
-- **`Dapr.Workflow` 1.19.0 is preview-only.** Pin the newest stable rather than the
-  newest version.
-- **Do not invent a Diagrid package for workflows.** There is no
-  `Diagrid.Agents.Workflow`, and no Diagrid workflow package on any registry.
-
+If the registry has a newer release than the file names, use the newer one and say so.
+If the project already pins an older SDK, keep the user's pin unless it cannot work.
 Never write a coordinate you have not watched resolve. A package id that 404s sends the
 user hunting for a Diagrid problem that does not exist, which is worse than no skill.
 
@@ -68,6 +55,13 @@ current project, so pass the project on every call.
 The managed components have fixed names — `pubsub` for the broker and `kvstore` for the
 KV store. The managed workflow store is wired in implicitly and has no component name.
 Agent infrastructure arrives with the managed KV store.
+
+Existing code and the Dapr quickstarts often use other names, such as `statestore`,
+`shippingpubsub` or `inventory`. To run that code on Diagrid, read the name from an
+environment variable that defaults to the old name, set the variable to `kvstore` or
+`pubsub`, and tell the user which files changed and why. Search for every literal use
+of the old name first: a second hard-coded copy fails the run with `state store
+inventory is not found`.
 
 A project holds **one managed pub/sub and one managed KV store** on every plan, and no plan upgrade raises it, so never offer one as the
 fix. Fan work out across topics on the one broker. These are plan values overlaid per
@@ -137,7 +131,9 @@ user asks. Workflows themselves are not quotaed — instances are free, apps are
 Start one instance and inspect it:
 
 - `diagrid_start_workflow` with the project, the app identity and the workflow name, and
-  the input if it takes one. It assigns the run id and returns it; keep it.
+  the input if it takes one. It assigns the run id and returns it; keep it. The name a
+  workflow is registered under, and the input shape it accepts from outside the app,
+  differ by language; the language file says which.
 - `diagrid_list_workflow_runs` for the project, if you lost the id.
 - `diagrid_get_workflow_run` for the run: the execution graph, and which step it is on
   or failed at.
@@ -210,8 +206,8 @@ that 404s or lands on the wrong project is worse than no link.**
 - **Use the Diagrid MCP tools for everything in Diagrid.**
 - **Do not create a project.** Use `default`. If it is gone, ask which existing project
   to use, and send someone with no project to the console to create one.
-- **Do not name a package version you have not resolved.** Check the registry, or state
-  the package without a version.
+- **Use the version in the language file.** Check the registry for a newer one, and never
+  name a version you have not resolved.
 - **Do not scaffold per-language variants of this skill.** One skill detects the
   language; five near-identical skills would compete for the same request and lose.
 - **Do not put a side effect in the workflow body.** Activities exist for that.
@@ -221,9 +217,4 @@ that 404s or lands on the wrong project is worse than no link.**
 - **Never guess at a console URL.** Use the routes above, put the project in the right
   parameter, and print plain identifiers when you cannot build a link you trust.
 
-<!-- These three coordinates are taught as traps, not as instructions. The lint
-     gate rejects them by default because a skill that tells someone to use one
-     is a real defect; naming them in order to warn against them is the opposite.
-     lint-allow-banned: go-sdk/workflow — taught as an import path removed in go-sdk v1.14.0
-     lint-allow-banned: Diagrid.Agents.Workflow — taught as a package id that 404s
--->
+<!-- lint-allow-banned: Diagrid.Agents.Workflow — taught as a package id that 404s -->

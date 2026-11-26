@@ -130,14 +130,15 @@ workflow could plausibly live in either.
 All five can host a Dapr Workflow, because a workflow needs the **Dapr SDK** and
 nothing else. There is no Diagrid adapter in this path and no language is second
 class here — the adapter gap people remember is an agent-framework question, not a
-workflow one. Coordinates and per-language shapes are in
-[reference/codegen.md](reference/codegen.md).
+workflow one. For the packages, their minimum versions and each language's
+spellings and traps, load `diagrid-workflow-scaffold` and read its file for that
+language.
 
 ## 6. Generate from the IR, one record at a time
 
-Walk the IR and emit code. The mapping from record to construct, the five languages'
-signatures, the file layout and the serialization traps are in
-[reference/codegen.md](reference/codegen.md);
+Walk the IR and emit code. The mapping from record to construct and the file layout
+are in [reference/codegen.md](reference/codegen.md); each language's signatures and
+serialization traps are in `diagrid-workflow-scaffold`;
 [reference/worked-example.md](reference/worked-example.md) runs a small flowchart all
 the way through so the shape of the output is not left to imagination.
 
