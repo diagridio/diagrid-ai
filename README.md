@@ -35,12 +35,12 @@ Then check it landed — **both commands, not just the second**:
 
 ```bash
 claude plugin list                           # expect Version: 0.10.0 or later
-claude plugin details diagrid@diagrid    # expect 12 skills
+claude plugin details diagrid@diagrid    # expect 13 skills
 ```
 
 `list` reports the version you actually have. `details` reports the version the
 marketplace is offering, reading the installed copy only when the two agree — so on its
-own it can show you 12 skills while your session loads 11. If either looks wrong, jump to
+own it can show you 13 skills while your session loads 12. If either looks wrong, jump to
 [If your install is behind](#if-your-install-is-behind).
 
 The same marketplace also lists `dapr-skills`, for Dapr applications that run outside
@@ -102,7 +102,7 @@ server it just wrote:
 
 ```toml
 [mcp_servers.diagrid.http_headers]
-X-Diagrid-Plugin-Version = "0.11.0"
+X-Diagrid-Plugin-Version = "0.12.0"
 ```
 
 **GitHub Copilot CLI**
@@ -116,7 +116,7 @@ X-Diagrid-Plugin-Version = "0.11.0"
     "diagrid": {
       "type": "http",
       "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-      "headers": { "X-Diagrid-Plugin-Version": "0.11.0" },
+      "headers": { "X-Diagrid-Plugin-Version": "0.12.0" },
       "oauthClientId": "copilot-cli",
       "tools": ["*"]
     }
@@ -134,7 +134,7 @@ Then run `/mcp` inside Copilot and authenticate the server in the browser.
     "diagrid": {
       "type": "http",
       "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-      "headers": { "X-Diagrid-Plugin-Version": "0.11.0" },
+      "headers": { "X-Diagrid-Plugin-Version": "0.12.0" },
       "oauth": { "clientId": "vscode" }
     }
   }
@@ -228,7 +228,7 @@ The failure that *is* silent is a missing `-y` where nothing can answer the prom
 is every CI runner: it prints `Done!`, installs zero skills, and exits **0**. Pass `-y`,
 and assert a skill count rather than an exit code.
 
-`--global` writes all twelve skills to `~/.copilot/skills/`. Copilot should read them in
+`--global` writes all thirteen skills to `~/.copilot/skills/`. Copilot should read them in
 every project from there. **Not yet verified:** we have checked only that the installer
 writes that directory, not that Copilot loads skills from it. Check that Copilot sees them:
 
@@ -360,11 +360,12 @@ find yourself having to, that's a bug worth reporting (see [Feedback](#feedback)
 | `diagrid-debug` | Diagnose why something isn't working |
 | `diagrid-workflow-determinism` | Replay-safety rails for an orchestrator body |
 | `diagrid-activity-idempotency` | Make activities safe to run twice |
+| `diagrid-mcp-on-behalf-of` | Check which signed-in user is calling your app, and run its MCP tool calls as that user |
 
 Language and framework are **detected, not asked**. There is no `catalyst-workflow-python`
 skill — the workflow skill reads your repo and works out that it's a Python project.
 
-**Cost:** roughly **1240 tokens always-on** across all twelve (~103 each, estimated from the first ten), added to every
+**Cost:** roughly **1340 tokens always-on** across all thirteen (~103 each, estimated from the first ten), added to every
 session whether or not a skill fires. Each skill costs a few thousand more only when it
 actually fires. That figure is **per model** — `claude plugin details` resolves a tokenizer
 from your active model, so the same ten descriptions cost ~103 each on Sonnet 5 and Opus 5
@@ -450,7 +451,7 @@ reported success and repaired nothing. Deleting the directory is the only fix:
 ```bash
 rm -rf ~/.claude/plugins/cache/diagrid/diagrid
 claude plugin install diagrid@diagrid
-claude plugin details diagrid@diagrid    # expect 12 skills
+claude plugin details diagrid@diagrid    # expect 13 skills
 ```
 
 CI now fails any change to plugin content that doesn't bump the version, so the second one

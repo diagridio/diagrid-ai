@@ -214,10 +214,10 @@ def main() -> int:
     ))
 
     def too_many(s: Path) -> None:
-        for i in range(13):
+        for i in range(14):
             write(s, f"skill-{i:02d}", GOOD.format(name=f"skill-{i:02d}"))
 
-    cases.append(case("more than 12 skills", too_many))
+    cases.append(case("more than 13 skills", too_many))
 
     # The scope rule, which lives in two skills' prose because this repo has no
     # shared-fragment mechanism. The defect being guarded is real and measured:
