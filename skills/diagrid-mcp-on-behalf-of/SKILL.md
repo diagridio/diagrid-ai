@@ -1,0 +1,238 @@
+---
+name: diagrid-mcp-on-behalf-of
+description: Verify which signed-in user is calling an app or agent on Diagrid, and run its MCP tool calls as that user (on-behalf-of, delegated). Use for user identity, OBO, X-Diagrid-User-Token, requireUser, or "only the signed-in user may do this".
+---
+
+# Verify the caller and call MCP tools as them
+
+Goal: end this skill with the user's app checking who is calling it, and with its MCP tool
+calls reaching the tool as that same person. And with proof: one call made as the user,
+where the app reports the user and the MCP server reports the same user plus the app
+acting for them, and one call that skips Diagrid and is refused. Identity that is only
+wired, and never seen arriving at the tool, has not been shown to work.
+
+Diagrid does the security work. On the way in, it verifies the caller's login, exchanges
+it for a Diagrid-issued token, and puts that token in the `X-Diagrid-User-Token` header.
+On the way out, the MCP proxy mints a new token for each tool call. That token names the
+user (`sub`) and the app acting for them (`act.sub`). The app itself only does two things,
+both with the Diagrid identity package for its language:
+
+1. **Verify the caller.** Middleware checks `X-Diagrid-User-Token` on every request and
+   hands the handler a verified user.
+2. **Carry the caller onward.** An identity-aware HTTP client puts the caller's token on
+   the MCP client's requests to the proxy.
+
+## Never
+
+- **Never parse, log, store, echo or print the user's token, and never ask the user to
+  paste one.** It is a live credential for that person. The package verifies it.
+- **Never set `X-Diagrid-User-Token` by hand** where the package's client does it. The
+  client clears a stale header, drops it on a redirect to another origin, and leaves it
+  off when there is no user.
+- **Never require `agent.invoke`,** or any scope the user did not name. No Diagrid Cloud
+  login carries it, so every call answers 403.
+- **Never connect the MCP client at startup.** There is no caller then, and a server that
+  requires a user refuses the `initialize` request.
+- **Never call the MCP server's own URL.** Only the proxy mints the user's token, so the
+  tool sees no user.
+- **Never promise the user on a tool call that runs as a workflow activity,** such as
+  under `diagrid-spring-ai-starter` or a durable runner. The request is over by then.
+- **Never assume `requireUser` survived a change to the policy.** An old Diagrid CLI
+  drops it with no error, and the tool silently stops seeing the user (section 3).
+- **Never show the token fields of a full MCP server or App ID read.** They hold the App
+  ID's API token.
+
+## 1. Pick the language file
+
+Read the project's manifest and load only the matching file. Do not load the others.
+Each one has the install line, the middleware, the MCP client wiring and the traps for
+that SDK:
+
+| Manifest | Load | Package |
+| --- | --- | --- |
+| `pyproject.toml`, `requirements.txt` | [reference/python.md](reference/python.md) | `diagrid[identity]` on PyPI |
+| `*.csproj` | [reference/dotnet.md](reference/dotnet.md) | `Diagrid.AI.Identity` on NuGet |
+| `pom.xml`, `build.gradle` | [reference/java.md](reference/java.md) | `io.diagrid:diagrid-spring-ai-identity` on Maven Central |
+| `go.mod` | [reference/go.md](reference/go.md) | `github.com/diagridio/go-ai/identity` |
+| `package.json` | [reference/typescript.md](reference/typescript.md) | `@diagrid/agent-core` on npm |
+
+Rust has no identity package. Say so and stop. Do not write a token check by hand to
+fill the gap.
+
+## 2. Know what carries the user and what does not
+
+The caller's token lives in request-scoped context while the inbound request is being
+handled. Only one kind of call carries the user today: an **MCP tool call through the
+proxy**, at `$DAPR_HTTP_ENDPOINT/v1.0/diagrid/mcp/<server>`, sent with the identity-aware
+client while that request is still open.
+
+These do not carry the user yet. Say so plainly when the user asks for one, and do not
+wire something that looks like it works:
+
+- **Calls to sub-agents, other apps or internal services,** by service invocation or plain
+  HTTP. Diagrid does not pass the user on these calls yet, so do not put the identity
+  client on them.
+
+- **A tool call that runs as a workflow activity.** A durable agent runner, the
+  `diagrid-spring-ai-starter`, and go-ai's runner, `agent` and `mcp` packages all run
+  tool calls as Dapr Workflow steps, after the inbound request has ended. There is no
+  caller left to carry. Identity works on the request path only.
+- **A call straight to the MCP server's own URL.** Only the proxy mints the user's token.
+  A direct call reaches the server with no user.
+- **Third-party APIs.** Call those with a plain HTTP client, so the user's Diagrid token
+  is never sent outside Diagrid.
+- **Human-in-the-loop approval.** It needs a workflow that can wait, so it is not
+  available on this path.
+
+A call with no user behind it, such as a cron, pub/sub or scheduled trigger, has nothing
+to carry. The client then sends no user header.
+
+## 3. Set up the MCP server so Diagrid passes the user on
+
+Two settings on the server decide whether the tool ever sees a user. Read them first,
+with `diagrid_get_mcp_server` and `diagrid_get_access_policy`. Change them with
+`diagrid_apply`, after `diagrid_get_resource_schema` for the kind. A changed manifest is
+sent back whole, because a field left out is dropped. Say what will change and get the
+user's agreement first.
+
+**The `MCPServer` auth profile must be SPIFFE JWT.** Only that profile lets Diagrid mint
+the user's token for the server. The other profiles send an app credential with no user
+in it. `scopes` lists the App IDs allowed to call the server:
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: crm-mcp
+spec:
+  endpoint:
+    streamableHTTP:
+      url: https://crm.example.com/mcp
+      auth:
+        spiffe:
+          jwt:
+            header: Authorization
+            headerValuePrefix: "Bearer "
+scopes:
+  - identity-agent
+```
+
+A server whose upstream runs on the user's machine reports `error` until its tunnel
+opens. That is expected, not a failed apply.
+
+**The `MCPServerAccessPolicy` must require a user.** By default Diagrid removes the
+user's token before forwarding, and the tool sees no user. Requiring one turns
+propagation on, and also rejects any call that has no user. Diagrid creates the policy
+together with the server, with the same name as the server, so a new server must be
+listed by `diagrid_get_mcp_server` before its policy can be applied. Read the policy with
+`diagrid_get_access_policy`, which also gives its `apiVersion`, keep its existing
+`rules`, and add `auth` to its spec:
+
+```yaml
+kind: MCPServerAccessPolicy
+metadata:
+  name: crm-mcp
+spec:
+  mcpServerRef: crm-mcp
+  rules:
+    - callers:
+        - appID: identity-agent
+      grants:
+        - capability: tools
+          names: ["account_summary"]
+  auth:
+    spiffeJWT:
+      requireUser: true
+```
+
+Grant the app its tools with `diagrid_grant_access`, as for any MCP server.
+`diagrid_grant_access` and `diagrid_revoke_access` keep `auth`. A Diagrid CLI older than
+v1.83.0 does not know the field, so its grant and revoke drop it. The calls then still
+succeed, and the tool silently sees no user. So after any change to the server or its policy, read it again
+with `diagrid_get_access_policy`, confirm `spec.auth.spiffeJWT.requireUser` is still
+`true`, and run the proof in section 6 again. If the user changes access from the CLI,
+ask them to update it.
+
+Requiring a user applies to every caller of that server, including the user's own cron
+jobs. Before you set it, check who the policy's `rules` name. If a tool must serve both
+people and jobs, register the same endpoint as two MCP servers: one that requires a user,
+granted to the agents a person invokes, and one that does not, granted to the jobs. Keep
+the two sets of callers apart, or a caller in both can skip the requirement.
+
+The policy can also list scopes the user's token must carry. Add them only for scopes
+the user's identity provider really issues, as the next section explains.
+
+## 4. Wire the app
+
+Follow the language file. In every language:
+
+- **Leave the middleware config empty.** Issuer, audience and signing keys are discovered
+  from the sidecar on the first authenticated request. Setting them by hand is the usual
+  cause of `oauth.invalid_issuer` and `oauth.invalid_signature`.
+- **Do not require a scope by default.** The SDK READMEs show `agent.invoke`, but a
+  Diagrid Cloud login carries only `openid`, `profile`, `email` and `offline_access`.
+  Require a scope only when the user names one their identity provider issues.
+- **The default rejects any request without a user,** health probes included. Turn off
+  the app health check (`enableAppHealthCheck: false` on the app in the dev run file), so
+  every route still requires a user. Use the language file's tokenless option only when
+  something must probe the app, and then check for a missing user in every handler.
+- **The MCP client needs two headers.** `dapr-api-token: $DAPR_API_TOKEN` says the app
+  may use its sidecar. The identity client adds `X-Diagrid-User-Token`, which says whose
+  behalf it acts on. Add the first yourself and never the second.
+- **Open the MCP session while the inbound request is being handled**, so the caller's
+  context is there for every MCP request, the `initialize` handshake included. The
+  identity-aware HTTP client can be shared across requests, because it reads the caller
+  per request. The MCP session cannot: it belongs to the user who opened it, so open one
+  per request and close it when the handler is done.
+
+## 5. Read the user on the MCP server
+
+If the user also owns the MCP server, its tools read the user from the token Diagrid
+mints in `X-Diagrid-User-Token`: `sub` is the end user and `act.sub` is the app acting for
+them. Check it separately from the `Authorization` header, which only proves the request
+came from Diagrid.
+
+## 6. Prove it
+
+The app has to receive requests from Diagrid, so it runs on the user's machine with a
+tunnel. Load `diagrid-app-tunnels` for that. Run the MCP server the same way if it is
+local too.
+
+**As the user.** No `diagrid_*` tool can call an app as the signed-in user yet. Ask the
+user to send one request to the app through Diagrid as themselves. The "Ask the agent who
+you are" step of the enterprise-identity quickstart for their language shows the command.
+That command prints the request it sent as well, token included, so ask the user to share
+only its `Status Code` and `Data` lines. Expect 200, the app reporting the user's subject,
+and the MCP server's log reporting that same subject plus the app's identity as
+`act.sub`.
+
+**Without Diagrid.** Call the app's local port directly, with no header. Expect `401` and
+`{"error":"oauth.missing_token"}`. That proves the app refuses a caller Diagrid did not
+verify.
+
+A Diagrid Cloud login works only on Diagrid Cloud. Self-managed BYOC and Enterprise
+Server regions trust the customer's own identity provider instead. There the caller sets
+`X-Diagrid-User-Token: Bearer <token from their provider>` on the request itself. See
+https://docs.diagrid.io/develop/agents/enterprise-identity/custom-idp-tokens.
+
+## Errors
+
+The same `oauth.*` code means a different thing depending on where it shows up. On the
+response to the app's own request it came from the middleware. On the response to an
+MCP call it came from the server's access policy.
+
+| Code | Where | Meaning and fix |
+| --- | --- | --- |
+| `oauth.missing_token` 401 | app | No user on the request. Called directly instead of through Diagrid, or a health probe. |
+| `oauth.missing_token` 401 | MCP call | The server requires a user and the call had none: a cron or pub/sub trigger, a plain HTTP client instead of the identity one, or a call made after the request ended. |
+| `oauth.missing_scope` 403 | either | A required scope is not in the token. For a Diagrid Cloud user, remove the scope. |
+| `oauth.invalid_issuer`, `oauth.invalid_audience`, `oauth.invalid_signature` 401 | app | The middleware was given an issuer, audience or JWKS by hand. Remove them. |
+| `oauth.not_configured` 503 | app | No Diagrid connection to discover the issuer from. Start the app with its connection and tunnel, not on its own or under plain `dapr run`. |
+| `oauth.verifier_unavailable` 503 | either | Signing keys not loaded yet. Retry. |
+| `obo.exchange_failed` 502 | MCP call | Diagrid could not mint the user's token. Retry, then raise a support case. |
+| `invalid_grant` 401 | before the app | The login's issuer is not trusted in this region, or the login expired. Ask the user to sign in again. |
+
+**The tool ran but saw no user.** The server does not require a user, or its auth profile
+is not SPIFFE JWT. See section 3.
+
+Docs: https://docs.diagrid.io/develop/agents/enterprise-identity

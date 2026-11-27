@@ -56,7 +56,7 @@ update the skills, update the header to match.
 
    ```bash
    claude plugin list                     # expect Version: 0.10.0 or later
-   claude plugin details diagrid@diagrid  # expect 12 skills
+   claude plugin details diagrid@diagrid  # expect 13 skills
    ```
 
    `list` reports the version you have; `details` reports the one the marketplace offers.
@@ -108,7 +108,7 @@ organization; the `diagrid-app-tunnels` skill checks that both match.
 
    ```toml
    [mcp_servers.diagrid.http_headers]
-   X-Diagrid-Plugin-Version = "0.11.0"
+   X-Diagrid-Plugin-Version = "0.12.0"
    ```
 
 3. **Sign in.**
@@ -125,8 +125,8 @@ organization; the `diagrid-app-tunnels` skill checks that both match.
    npx -y skills add diagridio/diagrid-ai --agent github-copilot --skill '*' --yes
    ```
 
-   This writes all 12 skills to `.agents/skills/`, one of Copilot's project skills
-   directories. Run `/skills list` inside Copilot and expect all 12. Don't add `--global`:
+   This writes all 13 skills to `.agents/skills/`, one of Copilot's project skills
+   directories. Run `/skills list` inside Copilot and expect all 13. Don't add `--global`:
    it writes `~/.agents/skills/`, which Copilot does not read; see
    [Copilot sees no skills](docs/troubleshooting.md#copilot-sees-no-skills).
 
@@ -139,7 +139,7 @@ organization; the `diagrid-app-tunnels` skill checks that both match.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.11.0" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.12.0" },
          "oauthClientId": "copilot-cli",
          "tools": ["*"]
        }
@@ -168,7 +168,7 @@ organization; the `diagrid-app-tunnels` skill checks that both match.
        "diagrid": {
          "type": "http",
          "url": "https://mcp.cloud.r1.diagrid.io/mcp",
-         "headers": { "X-Diagrid-Plugin-Version": "0.11.0" },
+         "headers": { "X-Diagrid-Plugin-Version": "0.12.0" },
          "oauth": { "clientId": "vscode" }
        }
      }
@@ -221,16 +221,17 @@ so clients with a registry-backed server gallery can find it there. The earlier 
 
 | client | skills installed | skills loaded by the client | a Diagrid question answered |
 | --- | --- | --- | --- |
-| Claude Code | ✅ 12/12 | ✅ with 10 skills; not yet re-checked with 12 | ✅ the right skill fires unprompted |
-| Codex | ✅ 12/12 | ✅ in the model-visible prompt, with 10 skills; not yet re-checked with 12 | not yet verified |
-| GitHub Copilot CLI | ✅ 12/12 | ✅ per-project install, with 10 skills; not yet re-checked with 12; `--global` is not read | not yet verified |
-| VS Code (Copilot Chat) | ✅ 12/12 | not yet verified | not yet verified |
+| Claude Code | ✅ 13/13 | ✅ with 10 skills; not yet re-checked with 13 | ✅ the right skill fires unprompted |
+| Codex | ✅ 13/13 | ✅ in the model-visible prompt, with 10 skills; not yet re-checked with 13 | not yet verified |
+| GitHub Copilot CLI | ✅ 13/13 | ✅ per-project install, with 10 skills; not yet re-checked with 13; `--global` is not read | not yet verified |
+| VS Code (Copilot Chat) | ✅ 13/13 | not yet verified | not yet verified |
 | claude.ai | MCP only | MCP only | ✅ answered who was signed in |
 
 CI runs the real installer for Claude Code, Codex and Copilot on every pull request and
 checks that every skill in `skills/` lands. Loading was checked by hand in each client
-with 10 skills, before `diagrid-app-tunnels` and `diagrid-agent-harness` were added, and
-has not yet been re-checked with all 12. If you get Codex or Copilot to answer a
+with 10 skills, before `diagrid-app-tunnels`, `diagrid-agent-harness` and
+`diagrid-mcp-on-behalf-of` were added, and
+has not yet been re-checked with all 13. If you get Codex or Copilot to answer a
 Diagrid question, please [report it](#feedback) with the wording you used and which
 skill fired.
 
@@ -355,6 +356,7 @@ find yourself having to, that's a bug worth reporting (see [Feedback](#feedback)
 | `diagrid-debug` | Diagnose why something isn't working |
 | `diagrid-workflow-determinism` | Replay-safety rails for an orchestrator body |
 | `diagrid-activity-idempotency` | Make activities safe to run twice |
+| `diagrid-mcp-on-behalf-of` | Check which signed-in user is calling your app, and run its MCP tool calls as that user |
 
 Language and framework are **detected, not asked**. There is no `catalyst-workflow-python`
 skill — the workflow skill reads your repo and works out that it's a Python project.
@@ -436,7 +438,7 @@ again:
 ```bash
 rm -rf ~/.claude/plugins/cache/diagrid/diagrid
 claude plugin install diagrid@diagrid
-claude plugin details diagrid@diagrid  # expect 12 skills
+claude plugin details diagrid@diagrid  # expect 13 skills
 ```
 
 Why this happens, how to fix `dapr-skills` the same way, and the installer pitfalls for

@@ -6,7 +6,7 @@ Detail behind the short fixes in the [README](../README.md).
 
 Start with `claude plugin list`. It reports the version you actually have.
 `claude plugin details diagrid@diagrid` reports the version the marketplace is offering,
-and reads the installed copy only when the two agree, so on its own it can show you 12
+and reads the installed copy only when the two agree, so on its own it can show you 13
 skills while your session loads fewer.
 
 ### Your version is older than `main`
@@ -33,7 +33,7 @@ repair nothing. Deleting the directory is the only fix:
 ```bash
 rm -rf ~/.claude/plugins/cache/diagrid/diagrid
 claude plugin install diagrid@diagrid
-claude plugin details diagrid@diagrid  # expect 12 skills
+claude plugin details diagrid@diagrid  # expect 13 skills
 ```
 
 CI fails any change to plugin content that doesn't bump the version, so this should not
@@ -82,7 +82,7 @@ in its `<skills_instructions>` block with its description.
 
 Every installed skill adds its description to every session, whether or not a skill
 fires. Estimated at about 103 tokens a skill on Sonnet 5 and Opus 5, that is roughly
-1,240 across all 12; on Haiku 4.5 it is about 68 a skill. A skill costs a few thousand tokens more only when it
+1,340 across all 13; on Haiku 4.5 it is about 68 a skill. A skill costs a few thousand tokens more only when it
 fires.
 
 The figure depends on the model. `claude plugin details` counts tokens with your active
