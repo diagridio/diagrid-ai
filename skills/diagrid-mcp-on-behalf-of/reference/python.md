@@ -61,7 +61,7 @@ async def account_summary(account_id: str) -> str:
         async with ClientSession(read, write) as session:
             await session.initialize()
             result = await session.call_tool("account_summary", {"account_id": account_id})
-            if result.isError:
+            if result.is_error:
                 raise RuntimeError("account_summary was refused")
             return result.content[0].text
 ```
