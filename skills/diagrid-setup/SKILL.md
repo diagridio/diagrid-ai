@@ -142,7 +142,7 @@ Report two things, from a real call and not from configuration:
 - the organization, by name. It is `data.attributes.name` under `getCurrentOrgWithDetails`
   in the `diagrid_whoami` answer. If it has no name, give the organization ID instead,
   and do not explain why the name is missing.
-- the project you will work in
+- the project you will work in (`default`, or see "If `default` is absent")
 
 Then add one line on write access: whether the write tools are present. Keep it to that.
 Do not name the server, its address, the API host or any other endpoint; the user is
@@ -150,6 +150,25 @@ asking whether they are connected, not where to.
 
 If either is unknown, say which, and say what you tried. A confident "connected!" that
 turns out to be wrong costs more than an honest "the server is added but not signed in".
+
+## If `default` is absent
+
+Call `diagrid_list_projects`. If `default` is there, use it and stop. If it is not, do not
+reuse another project that is misconfigured (agent infrastructure off, no workflow store).
+If the user names a project they already have, read it with `diagrid_get_project` and use
+it only if it has managed pub/sub, a KV store, a workflow store and agent infrastructure; if
+it lacks any, tell them which.
+
+Before offering a new project, read the per-region project limit with `diagrid_get_usage`.
+If the organization is at it, say so and do not offer one: `diagrid_apply` would fail.
+Otherwise offer the user a new project and say what it needs: managed pub/sub, a KV store,
+a workflow store and agent infrastructure, all attached. Then wait. Read
+`diagrid_get_resource_schema` for `Project` first, and set every one of those four that the
+schema exposes explicitly rather than from memory. Send the manifest through
+`diagrid_apply` only after the user has agreed. Then confirm the project exists with
+`diagrid_list_projects` and that it has all of those attached with `diagrid_get_project`
+before working in it. If `diagrid_get_project` shows any of the four missing, tell the
+user which, do not work in the project, and do not create another one.
 
 ## What is not available over MCP yet
 
@@ -166,10 +185,11 @@ user's machine and print inbound requests as they arrive. No tool opens one, so 
 - **Use the Diagrid MCP tools for everything in Diagrid.**
 - **Never ask the user to paste a token or key of any kind.** If one is needed, the
   client's sign-in flow supplies it.
-- **Do not create a project.** Every organization gets a project named `default` with
-  managed pub/sub, KV, workflow store and agent infrastructure already attached. Use it. A
-  hand-made project that behaves differently is indistinguishable from a broken one to the
-  person asking for help.
+- **Use `default`; only if it is absent, offer to create a project and wait for the user's
+  agreement.** Every organization gets a project named `default` with managed pub/sub, KV,
+  workflow store and agent infrastructure already attached. Never reuse another project
+  that is not properly configured (agent infrastructure off, no workflow store): a
+  hand-made project that behaves differently is indistinguishable from a broken one.
 - **Do not install anything.** Everything here runs through the MCP server. Only an app
   tunnel needs the Diagrid CLI, and `diagrid-app-tunnels` installs it when one is needed.
 - **Name the proof.** This skill is done when `diagrid_whoami` has actually returned an

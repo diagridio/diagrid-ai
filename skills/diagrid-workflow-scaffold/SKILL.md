@@ -42,15 +42,17 @@ user hunting for a Diagrid problem that does not exist, which is worse than no s
 
 ## 3. Use the project named `default`
 
-**Do not create a project.** Every organization gets one named `default` with managed
-pub/sub, a managed KV store, the workflow store and agent infrastructure already
-attached. Workflow history lives in that managed store, so a hand-rolled project is the
-most common reason a freshly scaffolded workflow starts but never appears.
+**Use `default`; only if it is absent, offer to create a project and wait for the user's
+agreement.** Every organization gets one named `default` with managed pub/sub, a managed
+KV store, the workflow store and agent infrastructure already attached. Workflow history
+lives in that managed store, so a hand-rolled project is the most common reason a freshly
+scaffolded workflow starts but never appears.
 
 `default` is bootstrapped once, when the organization is first reconciled, and it is not
 recreated if someone deletes it. Confirm it with `diagrid_list_projects` rather than
-assuming; if it is gone, ask which project to use instead of creating one. There is no
-current project, so pass the project on every call.
+assuming. If it is gone, follow "If `default` is absent" in `diagrid-setup`; it covers a
+project the user names and creating a new one. There is no current project, so pass the
+project on every call.
 
 The managed components have fixed names — `pubsub` for the broker and `kvstore` for the
 KV store. The managed workflow store is wired in implicitly and has no component name.
@@ -204,8 +206,8 @@ that 404s or lands on the wrong project is worse than no link.**
 ## Rules
 
 - **Use the Diagrid MCP tools for everything in Diagrid.**
-- **Do not create a project.** Use `default`. If it is gone, ask which existing project
-  to use, and send someone with no project to the console to create one.
+- **Use `default`; only if it is absent, offer to create a project and wait for the user's
+  agreement.** Never reuse a misconfigured project.
 - **Use the version in the language file.** Check the registry for a newer one, and never
   name a version you have not resolved.
 - **Do not scaffold per-language variants of this skill.** One skill detects the
